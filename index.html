@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>MindClass — читалка ранобэ «Класс превосходства»</title>
+    <meta
+      name="description"
+      content="MindClass — удобная онлайн-читалка ранобэ «Добро пожаловать в класс превосходства»: тома первого и второго года обучения, закладки, настройки текста и обсуждения глав."
+    />
+    <meta name="theme-color" content="#07080c" />
+    <meta property="og:title" content="MindClass" />
+    <meta property="og:description" content="Читалка ранобэ «Добро пожаловать в класс превосходства» с закладками и обсуждениями." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // Тема применяется до отрисовки, чтобы не было вспышки светлого экрана.
+      ;(function () {
+        try {
+          var raw = localStorage.getItem('mindclass-ui')
+          var theme = raw ? JSON.parse(raw).state.theme : null
+          if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
+        } catch (e) {}
+      })()
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Для работы MindClass нужен JavaScript.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
