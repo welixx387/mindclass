@@ -3,25 +3,27 @@ import { HERO_ART } from '../lib/art'
 import { CLASS_POINTS_KEY, parseClassPoints, type ClassPointsMap } from '../lib/classPoints'
 import { DEFAULT_CAPTION, HERO_ART_KEY, parseHeroArt, type HeroArtSetting, type HeroPicture } from '../lib/heroArt'
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase'
+import { parseVolumeCovers, VOLUME_COVERS_KEY, type VolumeCoversMap } from '../lib/volumeCovers'
 
 export const heroArtQueryKey = ['site-settings', HERO_ART_KEY] as const
 
-// Последний известный арт хранится в браузере, чтобы при повторном визите
-// карточка сразу показывала картинку, а не мигала талисманом.
-const CACHE_KEY = 'mindclass:hero-art'
+// Последние известные настройки оформления хранятся в браузере, чтобы при
+// повторном визите картинки появлялись сразу, а не после запроса к базе.
+const HERO_CACHE = 'mindclass:hero-art'
+const COVERS_CACHE = 'mindclass:volume-covers'
 
-function readCache(): HeroArtSetting | null | undefined {
+function readCache<T>(key: string, parse: (value: unknown) => T): T | undefined {
   try {
-    const raw = localStorage.getItem(CACHE_KEY)
-    return raw === null ? undefined : parseHeroArt(JSON.parse(raw))
+    const raw = localStorage.getItem(key)
+    return raw === null ? undefined : parse(JSON.parse(raw))
   } catch {
     return undefined
   }
 }
 
-function writeCache(art: HeroArtSetting | null) {
+function writeCache(key: string, value: unknown) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(art))
+    localStorage.setItem(key, JSON.stringify(value))
   } catch {
     // Хранилище недоступно (приватный режим) — просто без кэша.
   }
@@ -31,7 +33,7 @@ export async function fetchHeroArt(): Promise<HeroArtSetting | null> {
   const { data, error } = await requireSupabase().from('site_settings').select('value').eq('key', HERO_ART_KEY).maybeSingle()
   if (error) throw error
   const art = parseHeroArt(data?.value)
-  writeCache(art)
+  writeCache(HERO_CACHE, art)
   return art
 }
 
@@ -42,7 +44,7 @@ export function useHeroArtSetting() {
     queryFn: fetchHeroArt,
     enabled: isSupabaseConfigured,
     staleTime: 5 * 60_000,
-    initialData: readCache,
+    initialData: () => readCache(HERO_CACHE, parseHeroArt),
     // Кэш из браузера показываем сразу, но всё равно сверяем с базой.
     initialDataUpdatedAt: 0,
   })
@@ -79,4 +81,30 @@ export function useClassPoints() {
     enabled: isSupabaseConfigured,
     staleTime: 5 * 60_000,
   })
+}
+
+export const volumeCoversQueryKey = ['site-settings', VOLUME_COVERS_KEY] as const
+
+export async function fetchVolumeCovers(): Promise<VolumeCoversMap> {
+  const { data, error } = await requireSupabase().from('site_settings').select('value').eq('key', VOLUME_COVERS_KEY).maybeSingle()
+  if (error) throw error
+  const covers = parseVolumeCovers(data?.value)
+  writeCache(COVERS_CACHE, covers)
+  return covers
+}
+
+/**
+ * Загруженные обложки томов. ready — известно ли уже, у каких томов есть
+ * картинка: до этого обложка не рисует узор, чтобы он не мелькнул перед ней.
+ */
+export function useVolumeCovers() {
+  const query = useQuery({
+    queryKey: volumeCoversQueryKey,
+    queryFn: fetchVolumeCovers,
+    enabled: isSupabaseConfigured,
+    staleTime: 5 * 60_000,
+    initialData: () => readCache(COVERS_CACHE, parseVolumeCovers),
+    initialDataUpdatedAt: 0,
+  })
+  return { covers: query.data, ready: !isSupabaseConfigured || query.data !== undefined || query.isError }
 }

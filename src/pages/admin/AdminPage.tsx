@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { BarChart3, Image as ImageIcon, LayoutDashboard, Library, MessageSquareWarning, ShieldAlert, Users } from 'lucide-react'
+import { BarChart3, BookImage, Image as ImageIcon, LayoutDashboard, Library, MessageSquareWarning, ShieldAlert, Users } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { EmptyState, PageLoader } from '../../components/ui/misc'
@@ -13,6 +13,7 @@ const UsersAdmin = lazy(() => import('./UsersAdmin'))
 const ModerationAdmin = lazy(() => import('./ModerationAdmin'))
 const AppearanceAdmin = lazy(() => import('./AppearanceAdmin'))
 const ClassPointsAdmin = lazy(() => import('./ClassPointsAdmin'))
+const CoversAdmin = lazy(() => import('./CoversAdmin'))
 
 const NAV = [
   { to: '/admin', label: 'Обзор', icon: LayoutDashboard, end: true },
@@ -20,6 +21,7 @@ const NAV = [
   { to: '/admin/users', label: 'Пользователи', icon: Users },
   { to: '/admin/comments', label: 'Комментарии', icon: MessageSquareWarning },
   { to: '/admin/class-points', label: 'Очки классов', icon: BarChart3 },
+  { to: '/admin/covers', label: 'Обложки', icon: BookImage },
   { to: '/admin/appearance', label: 'Оформление', icon: ImageIcon },
 ]
 
@@ -98,6 +100,7 @@ export default function AdminPage() {
             <Route path="users" element={<UsersAdmin />} />
             <Route path="comments" element={<ModerationAdmin />} />
             <Route path="class-points" element={<ClassPointsAdmin />} />
+            <Route path="covers" element={<CoversAdmin />} />
             <Route path="appearance" element={<AppearanceAdmin />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>

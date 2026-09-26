@@ -1,11 +1,13 @@
-import { memo, useId, useMemo } from 'react'
+import { memo, useId, useMemo, useState } from 'react'
+import { useVolumeCovers } from '../../api/site'
 import { getYear, volumeIndexInYear, type Volume } from '../../data/catalog'
 
 /**
  * Обложка тома, нарисованная кодом: горошек, глянцевый блик, лента с годом,
  * большой номер и орнамент-розетка, у каждого тома свой. Основные тома — насыщенные (1 год — сиреневый,
  * 2 год — розовый), половинные (сборники историй) — светлые.
- * Если у тома указан `cover`, показывается картинка.
+ * Если для тома загружена картинка («Админка → Обложки») или указан `cover`
+ * в каталоге, она становится фоном, а надписи остаются поверх неё.
  */
 
 const YEAR_HUE: Record<number, number> = { 1: 268, 2: 332, 3: 20 }
@@ -70,6 +72,8 @@ export const VolumeCover = memo(function VolumeCover({
   showMeta?: boolean
 }) {
   const uid = useId().replace(/:/g, '')
+  const { covers, ready } = useVolumeCovers()
+  const [failed, setFailed] = useState<string | null>(null)
   const index = volumeIndexInYear(volume)
   const year = getYear(volume.year)
   const side = volume.kind === 'side'
@@ -107,13 +111,12 @@ export const VolumeCover = memo(function VolumeCover({
         }
   }, [volume.year, index, side])
 
-  if (volume.cover) {
-    return (
-      <div className={`relative overflow-hidden ${className}`} style={{ aspectRatio: `${W} / ${H}` }}>
-        <img src={volume.cover} alt={`Обложка: ${year?.short ?? ''}, том ${volume.number}`} className="h-full w-full object-cover" loading="lazy" />
-      </div>
-    )
-  }
+  const candidate = covers?.[volume.slug]?.url ?? volume.cover
+  const image = candidate && candidate !== failed ? candidate : undefined
+  // Пока неизвестно, есть ли у тома картинка, узор не рисуется, чтобы не мелькнуть перед ней.
+  const ornament = !image && ready
+  // На картинке надписи всегда светлые: снизу и сверху их подкладывает затемнение.
+  const text = image ? { ink: '#ffffff', soft: 'rgba(255,255,255,0.82)' } : palette
 
   const angle = 20 + (index % 4) * 14
   const petals = 5 + (index % 4)
@@ -156,8 +159,14 @@ export const VolumeCover = memo(function VolumeCover({
           <stop offset="100%" stopColor="white" stopOpacity="0" />
         </linearGradient>
         <linearGradient id={`num${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={palette.numberFrom} />
-          <stop offset="100%" stopColor={palette.numberTo} />
+          <stop offset="0%" stopColor={image ? '#ffffff' : palette.numberFrom} />
+          <stop offset="100%" stopColor={image ? '#ffe3f0' : palette.numberTo} />
+        </linearGradient>
+        <linearGradient id={`shade${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#000" stopOpacity="0.62" />
+          <stop offset="30%" stopColor="#000" stopOpacity="0" />
+          <stop offset="66%" stopColor="#000" stopOpacity="0" />
+          <stop offset="100%" stopColor="#000" stopOpacity="0.74" />
         </linearGradient>
         <filter id={`blur${uid}`} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="10" />
@@ -169,51 +178,65 @@ export const VolumeCover = memo(function VolumeCover({
 
       <g clipPath={`url(#clip${uid})`}>
         <rect width={W} height={H} fill={`url(#bg${uid})`} />
-        <rect width={W} height={H} fill={`url(#dots${uid})`} mask={`url(#dotsMask${uid})`} />
-        <circle cx={W / 2} cy={222} r={150} fill={`url(#glow${uid})`} />
+        {image ? (
+          <>
+            <image href={image} width={W} height={H} preserveAspectRatio="xMidYMid slice" onError={() => setFailed(image)} />
+            {showMeta && <rect width={W} height={H} fill={`url(#shade${uid})`} />}
+          </>
+        ) : (
+          <>
+            <rect width={W} height={H} fill={`url(#dots${uid})`} mask={`url(#dotsMask${uid})`} />
+            <circle cx={W / 2} cy={222} r={150} fill={`url(#glow${uid})`} />
 
-        {/* Кольца вокруг орнамента */}
-        <g fill="none" stroke={side ? palette.dot : 'rgba(255,255,255,0.18)'} strokeWidth="1.2">
-          <circle cx={CX} cy={CY} r={92} />
-          <circle cx={CX} cy={CY} r={120} strokeDasharray="3 7" />
-        </g>
+            {ornament && (
+              <>
+                {/* Кольца вокруг орнамента */}
+                <g fill="none" stroke={side ? palette.dot : 'rgba(255,255,255,0.18)'} strokeWidth="1.2">
+                  <circle cx={CX} cy={CY} r={92} />
+                  <circle cx={CX} cy={CY} r={120} strokeDasharray="3 7" />
+                </g>
 
-        {/* Орнамент со свечением */}
-        <g opacity={side ? 0.45 : 0.85} filter={`url(#blur${uid})`}>
-          <Rosette r={66} petals={petals} squash={squash} color={palette.glow} width={2.6} />
-        </g>
-        <Rosette r={66} petals={petals} squash={squash} color={palette.ornament} width={1.15} />
-        <Rosette r={34} petals={petals} squash={0.34} color={palette.ornament} width={1} turn={90 / petals} />
-        <circle cx={CX} cy={CY} r={8} fill="none" stroke={palette.ornament} strokeWidth={1.2} />
-        <circle cx={CX} cy={CY} r={2.6} fill={palette.ornament} />
+                {/* Орнамент со свечением */}
+                <g opacity={side ? 0.45 : 0.85} filter={`url(#blur${uid})`}>
+                  <Rosette r={66} petals={petals} squash={squash} color={palette.glow} width={2.6} />
+                </g>
+                <Rosette r={66} petals={petals} squash={squash} color={palette.ornament} width={1.15} />
+                <Rosette r={34} petals={petals} squash={0.34} color={palette.ornament} width={1} turn={90 / petals} />
+                <circle cx={CX} cy={CY} r={8} fill="none" stroke={palette.ornament} strokeWidth={1.2} />
+                <circle cx={CX} cy={CY} r={2.6} fill={palette.ornament} />
 
-        {/* Мелкие кольца и точки */}
-        {decor(index).map((d, i) =>
-          d.ring ? (
-            <circle key={i} cx={d.x} cy={d.y} r={9 * d.s} fill="none" stroke={palette.decor} strokeWidth={1.4} />
-          ) : (
-            <circle key={i} cx={d.x} cy={d.y} r={5 * d.s} fill={palette.decor} />
-          ),
+                {/* Мелкие кольца и точки */}
+                {decor(index).map((d, i) =>
+                  d.ring ? (
+                    <circle key={i} cx={d.x} cy={d.y} r={9 * d.s} fill="none" stroke={palette.decor} strokeWidth={1.4} />
+                  ) : (
+                    <circle key={i} cx={d.x} cy={d.y} r={5 * d.s} fill={palette.decor} />
+                  ),
+                )}
+              </>
+            )}
+
+            {/* Глянцевый блик */}
+            <rect x={-W} y={0} width={W * 3} height={70} fill={`url(#shine${uid})`} transform={`rotate(-28 ${W / 2} ${H / 2}) translate(0 ${60 + (index % 3) * 30})`} />
+          </>
         )}
 
-        {/* Глянцевый блик */}
-        <rect x={-W} y={0} width={W * 3} height={70} fill={`url(#shine${uid})`} transform={`rotate(-28 ${W / 2} ${H / 2}) translate(0 ${60 + (index % 3) * 30})`} />
-
-        {/* Лента с годом в углу */}
-        {/* После поворота на 45° видимая часть ленты — вокруг x = 0. */}
-        <g transform={`translate(${W} 0) rotate(45)`}>
-          <rect x={-90} y={40} width={180} height={24} fill={palette.band} opacity={side ? 0.95 : 0.92} />
-          {showMeta && (
-            <text x={0} y={56} fontSize="10" letterSpacing="2.4" fill={palette.bandInk} textAnchor="middle" fontWeight="700" fontFamily="Unbounded, Manrope, sans-serif">
-              {(year?.short ?? '').toUpperCase()}
-            </text>
-          )}
-        </g>
+        {/* Лента с годом в углу. После поворота на 45° видимая часть ленты — вокруг x = 0. */}
+        {(showMeta || !image) && (
+          <g transform={`translate(${W} 0) rotate(45)`}>
+            <rect x={-90} y={40} width={180} height={24} fill={palette.band} opacity={side ? 0.95 : 0.92} />
+            {showMeta && (
+              <text x={0} y={56} fontSize="10" letterSpacing="2.4" fill={palette.bandInk} textAnchor="middle" fontWeight="700" fontFamily="Unbounded, Manrope, sans-serif">
+                {(year?.short ?? '').toUpperCase()}
+              </text>
+            )}
+          </g>
+        )}
       </g>
 
       {showMeta && (
         <g fontFamily="Unbounded, Manrope, sans-serif">
-          <text x="22" y="40" fontSize="11" letterSpacing="4" fill={palette.soft} fontWeight="500">
+          <text x="22" y="40" fontSize="11" letterSpacing="4" fill={text.soft} fontWeight="500">
             ТОМ
           </text>
           <text x="18" y="108" fontSize={volume.number.length > 3 ? 62 : 76} fontWeight="700" fill={`url(#num${uid})`} letterSpacing="-2">
@@ -224,18 +247,18 @@ export const VolumeCover = memo(function VolumeCover({
             y={H - 26}
             fontSize={longTheme ? 10.5 : 12}
             letterSpacing={longTheme ? 1.6 : 2.4}
-            fill={palette.ink}
+            fill={text.ink}
             fontWeight="600"
           >
             {volume.theme.toUpperCase()}
           </text>
           {!longTheme && (
-            <text x={W - 22} y={H - 26} fontSize="8.5" letterSpacing="2.2" fill={palette.soft} textAnchor="end">
+            <text x={W - 22} y={H - 26} fontSize="8.5" letterSpacing="2.2" fill={text.soft} textAnchor="end">
               MINDCLASS
             </text>
           )}
           {side && (
-            <text x={W - 22} y={H - 44} fontSize="8.5" letterSpacing="2" fill={palette.soft} textAnchor="end">
+            <text x={W - 22} y={H - 44} fontSize="8.5" letterSpacing="2" fill={text.soft} textAnchor="end">
               ИСТОРИИ
             </text>
           )}
