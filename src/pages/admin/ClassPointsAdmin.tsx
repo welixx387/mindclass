@@ -1,22 +1,25 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Copy, Loader2, Pencil, Trash2 } from 'lucide-react'
+import { Copy, EyeOff, Loader2, Pencil, RotateCcw } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { saveClassPoints } from '../../api/admin'
 import { queryClient } from '../../api/queryClient'
-import { classPointsQueryKey, useClassPoints } from '../../api/site'
+import { classPointsQueryKey, useStoredClassPoints } from '../../api/site'
 import { VolumeCover } from '../../components/catalog/VolumeCover'
 import { confirmDialog } from '../../components/ui/Overlay'
 import { PageLoader } from '../../components/ui/misc'
 import { toast } from '../../components/ui/Toaster'
 import { getVolume, volumeFullTitle, YEARS, type Volume } from '../../data/catalog'
+import { CLASS_POINTS } from '../../data/classPoints'
 import {
   CLASS_GROUPS,
   LETTERS,
   MAX_POINTS,
+  mergeClassPoints,
   previousWithPoints,
   type ClassGroup,
   type ClassPointsMap,
+  type StoredClassPoints,
   type VolumePoints,
 } from '../../lib/classPoints'
 import type { ClassLetter } from '../../lib/types'
@@ -55,12 +58,32 @@ function summary(points: VolumePoints): string {
     .join(' · ')
 }
 
-function Editor({ volume, map, onClose }: { volume: Volume; map: ClassPointsMap; onClose: () => void }) {
+/** Откуда у тома очки: с вики, правка администратора, скрыт или пусто. */
+function sourceOf(slug: string, stored: StoredClassPoints): 'wiki' | 'edited' | 'hidden' | 'empty' {
+  if (slug in stored) return stored[slug] ? 'edited' : 'hidden'
+  return CLASS_POINTS[slug] ? 'wiki' : 'empty'
+}
+
+const SOURCE_LABEL = { wiki: 'по данным вики', edited: 'изменено вручную', hidden: 'скрыто', empty: 'не заполнено' }
+
+function Editor({
+  volume,
+  stored,
+  map,
+  onClose,
+}: {
+  volume: Volume
+  stored: StoredClassPoints
+  /** Итоговые очки: вики и правки вместе. */
+  map: ClassPointsMap
+  onClose: () => void
+}) {
   const current = map[volume.slug] ?? null
+  const fromWiki = CLASS_POINTS[volume.slug] ?? null
   const previous = previousWithPoints(volume.slug, map)
-  const [draft, setDraft] = useState<Draft>(() => toDraft(current ?? (previous ? map[previous.slug] : null), Boolean(current)))
+  const [draft, setDraft] = useState<Draft>(() => toDraft(current ?? fromWiki ?? (previous ? map[previous.slug] : null), Boolean(current ?? fromWiki)))
   const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState<'save' | 'remove' | null>(null)
+  const [busy, setBusy] = useState<'save' | 'remove' | 'restore' | null>(null)
 
   // Выбрали букву, которая уже у другого класса, — классы меняются буквами.
   const setLetter = (group: ClassGroup, letter: ClassLetter) =>
@@ -71,12 +94,13 @@ function Editor({ volume, map, onClose }: { volume: Volume; map: ClassPointsMap;
       return next
     })
 
-  const persist = async (nextMap: ClassPointsMap, kind: 'save' | 'remove') => {
+  const persist = async (nextStored: StoredClassPoints, kind: 'save' | 'remove' | 'restore') => {
     setBusy(kind)
     try {
-      await saveClassPoints(nextMap)
-      queryClient.setQueryData(classPointsQueryKey, nextMap)
-      toast.success(kind === 'save' ? 'Очки сохранены' : 'Очки тома удалены', { description: volumeFullTitle(volume) })
+      await saveClassPoints(nextStored)
+      queryClient.setQueryData(classPointsQueryKey, nextStored)
+      const message = { save: 'Очки сохранены', remove: 'Очки тома скрыты', restore: 'Вернули данные вики' }[kind]
+      toast.success(message, { description: volumeFullTitle(volume) })
       onClose()
     } catch (e) {
       toast.error('Не удалось сохранить', { description: translateError(e) })
@@ -90,20 +114,28 @@ function Editor({ volume, map, onClose }: { volume: Volume; map: ClassPointsMap;
     const parsed = fromDraft(draft)
     if (typeof parsed === 'string') return setError(parsed)
     setError(null)
-    void persist({ ...map, [volume.slug]: parsed }, 'save')
+    void persist({ ...stored, [volume.slug]: parsed }, 'save')
   }
 
   const remove = async () => {
     const ok = await confirmDialog({
-      title: 'Удалить очки тома?',
+      title: 'Убрать очки тома?',
       description: 'Итоги пропадут со страницы тома и из конца последней главы.',
-      confirmLabel: 'Удалить',
+      confirmLabel: 'Убрать',
       danger: true,
     })
     if (!ok) return
-    const nextMap = { ...map }
-    delete nextMap[volume.slug]
-    void persist(nextMap, 'remove')
+    const next = { ...stored }
+    // Значения с вики скрываются пометкой null, собственные просто удаляются.
+    if (fromWiki) next[volume.slug] = null
+    else delete next[volume.slug]
+    void persist(next, 'remove')
+  }
+
+  const restore = () => {
+    const next = { ...stored }
+    delete next[volume.slug]
+    void persist(next, 'restore')
   }
 
   return (
@@ -163,9 +195,14 @@ function Editor({ volume, map, onClose }: { volume: Volume; map: ClassPointsMap;
               <Copy size={15} /> Как в томе «{volumeFullTitle(previous)}»
             </button>
           )}
+          {fromWiki && volume.slug in stored && (
+            <button type="button" className="btn-ghost" onClick={restore} disabled={busy !== null}>
+              {busy === 'restore' ? <Loader2 size={15} className="animate-spin" /> : <RotateCcw size={15} />} Вернуть данные вики
+            </button>
+          )}
           {current && (
             <button type="button" className="btn-ghost hover:text-danger" onClick={() => void remove()} disabled={busy !== null}>
-              {busy === 'remove' ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />} Удалить
+              {busy === 'remove' ? <Loader2 size={15} className="animate-spin" /> : <EyeOff size={15} />} Убрать очки
             </button>
           )}
           <button type="button" className="btn-ghost" onClick={onClose} disabled={busy !== null}>
@@ -179,7 +216,7 @@ function Editor({ volume, map, onClose }: { volume: Volume; map: ClassPointsMap;
 
 /** «Очки классов»: итоги каждого тома для блока в конце тома. */
 export default function ClassPointsAdmin() {
-  const { data: map, isPending, isError, error } = useClassPoints()
+  const { data: stored, isPending, isError, error } = useStoredClassPoints()
   const [params, setParams] = useSearchParams()
   const openSlug = params.get('volume')
   const [year, setYear] = useState(() => getVolume(openSlug ?? undefined)?.year ?? 1)
@@ -192,7 +229,7 @@ export default function ClassPointsAdmin() {
   const open = (slug: string | null) => setParams(slug ? { volume: slug } : {}, { replace: true })
 
   if (isPending) return <PageLoader />
-  if (isError || !map) {
+  if (isError || !stored) {
     return (
       <div className="card p-6">
         <p className="font-semibold">Не удалось загрузить очки классов</p>
@@ -201,6 +238,7 @@ export default function ClassPointsAdmin() {
     )
   }
 
+  const map = mergeClassPoints(CLASS_POINTS, stored)
   const volumes = YEARS.find((y) => y.number === year)?.volumes ?? []
   const filled = volumes.filter((v) => map[v.slug]).length
 
@@ -208,8 +246,9 @@ export default function ClassPointsAdmin() {
     <div>
       <h1 className="font-display text-2xl font-semibold">Очки классов</h1>
       <p className="mt-2 max-w-2xl text-sm text-ink-2">
-        Очки четырёх классов на конец каждого тома. Читатели видят их в конце тома и после последней главы. Изменение считается по
-        сравнению с прошлым заполненным томом.
+        Очки четырёх классов на конец каждого тома. Читатели видят их в конце тома и после последней главы. Изначально они взяты с
+        You-Zitsu Wiki; любой том можно поправить или скрыть, а потом вернуть данные вики. Изменение считается по сравнению с прошлым
+        заполненным томом.
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
@@ -244,7 +283,10 @@ export default function ClassPointsAdmin() {
                   <p className="truncate text-sm font-semibold">
                     {volumeFullTitle(volume)} · {volume.theme}
                   </p>
-                  <p className={`truncate text-xs tabular-nums ${points ? 'text-ink-2' : 'text-muted'}`}>{points ? summary(points) : 'не заполнено'}</p>
+                  <p className={`truncate text-xs tabular-nums ${points ? 'text-ink-2' : 'text-muted'}`}>
+                    {points ? `${summary(points)} · ` : ''}
+                    <span className="text-muted">{SOURCE_LABEL[sourceOf(volume.slug, stored)]}</span>
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -256,7 +298,7 @@ export default function ClassPointsAdmin() {
                 </button>
               </div>
               <AnimatePresence initial={false}>
-                {isOpen && <Editor key={volume.slug} volume={volume} map={map} onClose={() => open(null)} />}
+                {isOpen && <Editor key={volume.slug} volume={volume} stored={stored} map={map} onClose={() => open(null)} />}
               </AnimatePresence>
             </li>
           )

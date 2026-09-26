@@ -4,8 +4,9 @@
  * Классы параллели Аянокодзи называются по лидерам: буква класса (A–D)
  * меняется вместе с расстановкой по очкам, а лидер — нет. Поэтому для
  * каждого тома хранится буква и очки каждого из четырёх классов.
- * Значения вносит администратор («Админка → Очки классов»), они лежат в
- * таблице site_settings под ключом class_points.
+ * Основа — данные с You-Zitsu Wiki (src/data/classPoints.ts). Администратор
+ * может поправить или скрыть любой том («Админка → Очки классов»): правки
+ * лежат в таблице site_settings под ключом class_points и важнее основы.
  */
 
 import { ALL_VOLUMES, getVolume, type Volume } from '../data/catalog'
@@ -41,6 +42,8 @@ export interface Standing {
 export type VolumePoints = Record<ClassGroup, Standing>
 /** Очки по томам. */
 export type ClassPointsMap = Record<string, VolumePoints>
+/** Правки администратора: том → свои очки или null («не показывать этот том»). */
+export type StoredClassPoints = Record<string, VolumePoints | null>
 
 function parseStanding(value: unknown): Standing | null {
   if (!value || typeof value !== 'object') return null
@@ -67,15 +70,29 @@ export function parseVolumePoints(value: unknown): VolumePoints | null {
 }
 
 /** Проверяет значение из базы: неизвестные тома и неполные записи отбрасываются. */
-export function parseClassPoints(value: unknown): ClassPointsMap {
-  const out: ClassPointsMap = {}
+export function parseClassPoints(value: unknown): StoredClassPoints {
+  const out: StoredClassPoints = {}
   if (!value || typeof value !== 'object' || Array.isArray(value)) return out
   for (const [slug, entry] of Object.entries(value)) {
     if (!getVolume(slug)) continue
+    if (entry === null) {
+      out[slug] = null
+      continue
+    }
     const parsed = parseVolumePoints(entry)
     if (parsed) out[slug] = parsed
   }
   return out
+}
+
+/** Итоговые очки: основа, поверх неё правки администратора; null убирает том. */
+export function mergeClassPoints(defaults: ClassPointsMap, stored: StoredClassPoints): ClassPointsMap {
+  const merged: ClassPointsMap = { ...defaults }
+  for (const [slug, entry] of Object.entries(stored)) {
+    if (entry) merged[slug] = entry
+    else delete merged[slug]
+  }
+  return merged
 }
 
 export interface StandingRow {

@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
+import { CLASS_POINTS } from '../data/classPoints'
 import { HERO_ART } from '../lib/art'
-import { CLASS_POINTS_KEY, parseClassPoints, type ClassPointsMap } from '../lib/classPoints'
+import { CLASS_POINTS_KEY, mergeClassPoints, parseClassPoints, type ClassPointsMap, type StoredClassPoints } from '../lib/classPoints'
 import { DEFAULT_CAPTION, HERO_ART_KEY, parseHeroArt, type HeroArtSetting, type HeroPicture } from '../lib/heroArt'
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase'
 import { parseVolumeCovers, VOLUME_COVERS_KEY, type VolumeCoversMap } from '../lib/volumeCovers'
@@ -67,20 +69,27 @@ export function useHeroArt(): HeroPicture | null | undefined {
 
 export const classPointsQueryKey = ['site-settings', CLASS_POINTS_KEY] as const
 
-export async function fetchClassPoints(): Promise<ClassPointsMap> {
+export async function fetchClassPoints(): Promise<StoredClassPoints> {
   const { data, error } = await requireSupabase().from('site_settings').select('value').eq('key', CLASS_POINTS_KEY).maybeSingle()
   if (error) throw error
   return parseClassPoints(data?.value)
 }
 
-/** Очки классов по томам; пустой объект, пока администратор их не внёс. */
-export function useClassPoints() {
+/** Правки очков, которые администратор сохранил в базе. */
+export function useStoredClassPoints() {
   return useQuery({
     queryKey: classPointsQueryKey,
     queryFn: fetchClassPoints,
     enabled: isSupabaseConfigured,
     staleTime: 5 * 60_000,
   })
+}
+
+/** Очки классов по томам: данные с вики и поверх них правки администратора. */
+export function useClassPoints(): { data: ClassPointsMap } {
+  const { data: stored } = useStoredClassPoints()
+  const data = useMemo(() => mergeClassPoints(CLASS_POINTS, stored ?? {}), [stored])
+  return { data }
 }
 
 export const volumeCoversQueryKey = ['site-settings', VOLUME_COVERS_KEY] as const

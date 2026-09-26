@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { CLASS_POINTS_KEY, type ClassPointsMap } from '../lib/classPoints'
+import { CLASS_POINTS_KEY, type StoredClassPoints } from '../lib/classPoints'
 import { HERO_ART_KEY, type HeroArtSetting } from '../lib/heroArt'
 import { VOLUME_COVERS_KEY, type VolumeCoversMap } from '../lib/volumeCovers'
 import type { ImportedChapter, ImportedImage } from '../lib/importers'
@@ -152,8 +152,8 @@ export async function saveVolumeCovers(map: VolumeCoversMap, unusedPaths: string
   for (const path of unusedPaths) if (!used.has(path)) await removeSiteFile(path)
 }
 
-/** Сохраняет очки классов по всем томам разом. */
-export async function saveClassPoints(map: ClassPointsMap): Promise<void> {
+/** Сохраняет правки очков классов по всем томам разом (null скрывает том). */
+export async function saveClassPoints(map: StoredClassPoints): Promise<void> {
   const { error } = await requireSupabase().from('site_settings').upsert({ key: CLASS_POINTS_KEY, value: map })
   if (error) throw error
 }
