@@ -24,3 +24,14 @@ describe('parseVolumeCovers', () => {
     expect(parseVolumeCovers([{ url: 'https://a.b/c.png' }])).toEqual({})
   })
 })
+
+describe('wiki covers', () => {
+  it('has a cover for every volume, served scaled from the wiki', async () => {
+    const { WIKI_COVERS } = await import('../data/wikiCovers')
+    const { ALL_VOLUMES } = await import('../data/catalog')
+    expect(ALL_VOLUMES.filter((v) => !WIKI_COVERS[v.slug])).toEqual([])
+    for (const url of Object.values(WIKI_COVERS)) {
+      expect(url).toMatch(/^https:\/\/static\.wikia\.nocookie\.net\/youkoso-jitsuryoku-shijou-shugi-no-kyoushitsu-e\/images\/.+_cover\.jpg\/revision\/latest\/scale-to-width-down\/\d+\?cb=\d+$/)
+    }
+  })
+})

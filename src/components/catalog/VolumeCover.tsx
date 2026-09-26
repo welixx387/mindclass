@@ -1,13 +1,15 @@
 import { memo, useId, useMemo, useState } from 'react'
 import { useVolumeCovers } from '../../api/site'
 import { getYear, volumeIndexInYear, type Volume } from '../../data/catalog'
+import { WIKI_COVERS } from '../../data/wikiCovers'
 
 /**
  * Обложка тома, нарисованная кодом: горошек, глянцевый блик, лента с годом,
  * большой номер и орнамент-розетка, у каждого тома свой. Основные тома — насыщенные (1 год — сиреневый,
  * 2 год — розовый), половинные (сборники историй) — светлые.
- * Если для тома загружена картинка («Админка → Обложки») или указан `cover`
- * в каталоге, она становится фоном, а надписи остаются поверх неё.
+ * Фоном становится картинка: своя из «Админки → Обложки», иначе `cover` из
+ * каталога, иначе обложка издания с вики. Надписи остаются поверх неё. Если
+ * картинка не загрузилась, берётся следующая, а без картинок — узор.
  */
 
 const YEAR_HUE: Record<number, number> = { 1: 268, 2: 332, 3: 20 }
@@ -73,7 +75,7 @@ export const VolumeCover = memo(function VolumeCover({
 }) {
   const uid = useId().replace(/:/g, '')
   const { covers, ready } = useVolumeCovers()
-  const [failed, setFailed] = useState<string | null>(null)
+  const [failed, setFailed] = useState<string[]>([])
   const index = volumeIndexInYear(volume)
   const year = getYear(volume.year)
   const side = volume.kind === 'side'
@@ -111,10 +113,10 @@ export const VolumeCover = memo(function VolumeCover({
         }
   }, [volume.year, index, side])
 
-  const candidate = covers?.[volume.slug]?.url ?? volume.cover
-  const image = candidate && candidate !== failed ? candidate : undefined
-  // Пока неизвестно, есть ли у тома картинка, узор не рисуется, чтобы не мелькнуть перед ней.
-  const ornament = !image && ready
+  // Пока неизвестно, есть ли у тома своя картинка, не показываем ни обложку с вики,
+  // ни узор, чтобы они не мелькнули перед ней.
+  const image = ready ? [covers?.[volume.slug]?.url, volume.cover, WIKI_COVERS[volume.slug]].find((src) => src && !failed.includes(src)) : undefined
+  const ornament = ready && !image
   // На картинке надписи всегда светлые: снизу и сверху их подкладывает затемнение.
   const text = image ? { ink: '#ffffff', soft: 'rgba(255,255,255,0.82)' } : palette
 
@@ -180,7 +182,7 @@ export const VolumeCover = memo(function VolumeCover({
         <rect width={W} height={H} fill={`url(#bg${uid})`} />
         {image ? (
           <>
-            <image href={image} width={W} height={H} preserveAspectRatio="xMidYMid slice" onError={() => setFailed(image)} />
+            <image href={image} width={W} height={H} preserveAspectRatio="xMidYMid slice" onError={() => setFailed((list) => [...list, image])} />
             {showMeta && <rect width={W} height={H} fill={`url(#shade${uid})`} />}
           </>
         ) : (
