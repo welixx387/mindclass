@@ -71,7 +71,7 @@ export function HeroCardFace({
       <span className="absolute right-5 top-5 font-display text-[10px] uppercase tracking-[0.25em] text-white/70">MindClass</span>
       {picture !== undefined && (
         <div className="absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-2xl bg-white/90 px-3.5 py-2 text-[#2c1226] shadow-lg">
-          <p className="font-display text-[10px] uppercase tracking-[0.2em] text-[#e0337f]">{picture ? 'тема оформления' : 'талисман сайта'}</p>
+          {!picture && <p className="font-display text-[10px] uppercase tracking-[0.2em] text-[#e0337f]">талисман сайта</p>}
           <p className="truncate font-display text-sm font-semibold">{picture ? picture.caption : 'Лина'}</p>
         </div>
       )}

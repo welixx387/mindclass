@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { HERO_ART } from '../lib/art'
+import { CLASS_POINTS_KEY, parseClassPoints, type ClassPointsMap } from '../lib/classPoints'
 import { DEFAULT_CAPTION, HERO_ART_KEY, parseHeroArt, type HeroArtSetting, type HeroPicture } from '../lib/heroArt'
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase'
 
@@ -60,4 +61,22 @@ export function useHeroArt(): HeroPicture | null | undefined {
   if (data) return { src: data.url, caption: data.caption, focusX: data.focusX, focusY: data.focusY }
   if (isPending && !isError) return undefined
   return BUNDLED
+}
+
+export const classPointsQueryKey = ['site-settings', CLASS_POINTS_KEY] as const
+
+export async function fetchClassPoints(): Promise<ClassPointsMap> {
+  const { data, error } = await requireSupabase().from('site_settings').select('value').eq('key', CLASS_POINTS_KEY).maybeSingle()
+  if (error) throw error
+  return parseClassPoints(data?.value)
+}
+
+/** Очки классов по томам; пустой объект, пока администратор их не внёс. */
+export function useClassPoints() {
+  return useQuery({
+    queryKey: classPointsQueryKey,
+    queryFn: fetchClassPoints,
+    enabled: isSupabaseConfigured,
+    staleTime: 5 * 60_000,
+  })
 }

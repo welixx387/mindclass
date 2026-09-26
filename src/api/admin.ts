@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { CLASS_POINTS_KEY, type ClassPointsMap } from '../lib/classPoints'
 import { HERO_ART_KEY, type HeroArtSetting } from '../lib/heroArt'
 import type { ImportedChapter, ImportedImage } from '../lib/importers'
 import { ILLUSTRATIONS_BUCKET, isSupabaseConfigured, requireSupabase } from '../lib/supabase'
@@ -135,6 +136,12 @@ export async function removeHeroArt(path?: string): Promise<void> {
   const { error } = await requireSupabase().from('site_settings').delete().eq('key', HERO_ART_KEY)
   if (error) throw error
   await removeSiteFile(path)
+}
+
+/** Сохраняет очки классов по всем томам разом. */
+export async function saveClassPoints(map: ClassPointsMap): Promise<void> {
+  const { error } = await requireSupabase().from('site_settings').upsert({ key: CLASS_POINTS_KEY, value: map })
+  if (error) throw error
 }
 
 export type ImportMode = 'append' | 'replace'

@@ -9,6 +9,7 @@ import { TiltCard } from '../components/catalog/VolumeCard'
 import { VolumeCover } from '../components/catalog/VolumeCover'
 import { CommentSection } from '../components/comments/CommentSection'
 import { EmptyState, ProgressRing } from '../components/ui/misc'
+import { ClassStandings } from '../components/volume/ClassStandings'
 import { adjacentVolumes, getVolume, getYear, volumeFullTitle, volumeTitle } from '../data/catalog'
 import { countLabel, readingTimeLabel } from '../lib/format'
 import { isSupabaseConfigured } from '../lib/supabase'
@@ -204,6 +205,9 @@ export default function VolumePage() {
           </ol>
         )}
       </section>
+
+      {/* Кто дочитал том до конца, видит итоги сразу, остальным они прячутся от спойлеров. */}
+      <ClassStandings slug={volume.slug} guard={!(list.length > 0 && completed === list.length)} className="mt-12" />
 
       <nav className="mt-12 grid gap-3 sm:grid-cols-2" aria-label="Соседние тома">
         {prev ? (

@@ -22,6 +22,7 @@ import { CHAPTER_META_COLUMNS, useChapter, useChapterNeighbors } from '../api/ch
 import { chapterTarget } from '../api/comments'
 import { useBookmarkActions, useBookmarks, useProgressList, useSaveProgress } from '../api/library'
 import { CommentSection } from '../components/comments/CommentSection'
+import { ClassStandings } from '../components/volume/ClassStandings'
 import { ChapterText } from '../components/reader/ChapterText'
 import { ReaderSettingsPanel } from '../components/reader/ReaderSettingsPanel'
 import { ReaderToc } from '../components/reader/ReaderToc'
@@ -116,6 +117,7 @@ function ChapterReader({ chapter }: { chapter: Chapter }) {
   const settings = useReaderSettings()
   const blocks = useMemo(() => parseChapter(chapter.content), [chapter.content])
   const { prev, next, siblings } = useChapterNeighbors(isDemo ? null : chapter)
+  const lastInVolume = !isDemo && siblings.length > 0 && siblings[siblings.length - 1].id === chapter.id
   const { data: allBookmarks } = useBookmarks()
   const { data: progressList, isFetched: progressFetched } = useProgressList()
   const { add, remove, updateNote } = useBookmarkActions()
@@ -434,6 +436,8 @@ function ChapterReader({ chapter }: { chapter: Chapter }) {
           <p className="mt-1 text-sm" style={{ color: 'rgb(var(--r-muted))' }}>
             {next ? 'Следующая глава уже ждёт.' : isDemo ? 'Теперь можно выбрать том в каталоге.' : 'Это последняя загруженная глава.'}
           </p>
+
+          {lastInVolume && <ClassStandings slug={chapter.volume_slug} className="mx-auto mt-10 max-w-2xl text-left" />}
 
           <div className="mx-auto mt-8 grid max-w-2xl gap-3 sm:grid-cols-2">
             {prev ? (
