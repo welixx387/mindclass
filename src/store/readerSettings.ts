@@ -45,8 +45,8 @@ export const READER_FONTS: { id: ReaderFont; label: string; css: string }[] = [
 ]
 
 export const READER_THEMES: { id: ReaderTheme; label: string; swatch: string; ink: string }[] = [
-  { id: 'auto', label: 'Как сайт', swatch: 'linear-gradient(135deg, #0c0d12 50%, #fafaf7 50%)', ink: '#888' },
-  { id: 'night', label: 'Ночь', swatch: '#0c0d12', ink: '#d6d8e0' },
+  { id: 'auto', label: 'Как сайт', swatch: 'linear-gradient(135deg, #100b14 50%, #fef7fb 50%)', ink: '#888' },
+  { id: 'night', label: 'Ночь', swatch: '#100b14', ink: '#e6dbe3' },
   { id: 'day', label: 'Белая комната', swatch: '#fafaf7', ink: '#1c1e24' },
   { id: 'sepia', label: 'Сепия', swatch: '#f4ecd8', ink: '#40301e' },
   { id: 'oled', label: 'Чёрный', swatch: '#000000', ink: '#c4c6ce' },

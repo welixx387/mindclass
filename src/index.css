@@ -3,52 +3,54 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ */
-/*  Дизайн-токены. Тёмная тема — по умолчанию, светлая — «Белая комната». */
+/*  Дизайн-токены. Тема по мотивам Амасавы Итики: сакура, малина, персик.  */
+/*  Тёмная тема — по умолчанию, светлая — «Белая комната».               */
+/*  --gold — второй, тёплый акцент (персиковый).                         */
 /* ------------------------------------------------------------------ */
 
 :root,
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg: 7 8 12;
-  --bg-elev: 12 14 20;
-  --surface: 17 20 28;
-  --surface-2: 25 29 39;
-  --line: 40 45 58;
-  --ink: 237 238 243;
-  --ink-2: 181 186 200;
-  --muted: 125 131 148;
-  --accent: 239 68 86;
-  --gold: 232 178 80;
-  --success: 52 211 153;
-  --danger: 248 113 113;
-  --year-1: 239 68 86;
-  --year-2: 99 125 255;
-  --grid-line: 255 255 255;
-  --piece-light: 244 244 246;
-  --grid-alpha: 0.035;
-  --noise-alpha: 0.05;
+  --bg: 13 8 16;
+  --bg-elev: 20 13 24;
+  --surface: 27 17 31;
+  --surface-2: 38 25 43;
+  --line: 60 41 66;
+  --ink: 252 242 248;
+  --ink-2: 218 193 210;
+  --muted: 160 130 151;
+  --accent: 255 94 164;
+  --accent-2: 190 70 255;
+  --gold: 255 186 140;
+  --success: 74 222 164;
+  --danger: 255 110 120;
+  --year-1: 168 140 255;
+  --year-2: 255 94 164;
+  --dot: 255 150 200;
+  --dot-alpha: 0.09;
+  --noise-alpha: 0.045;
 }
 
 [data-theme='light'] {
   color-scheme: light;
-  --bg: 245 245 242;
+  --bg: 254 247 251;
   --bg-elev: 255 255 255;
   --surface: 255 255 255;
-  --surface-2: 238 238 233;
-  --line: 222 222 215;
-  --ink: 16 18 24;
-  --ink-2: 66 71 84;
-  --muted: 112 117 130;
-  --accent: 208 36 58;
-  --gold: 170 118 22;
+  --surface-2: 251 236 245;
+  --line: 242 218 232;
+  --ink: 44 18 38;
+  --ink-2: 98 64 89;
+  --muted: 156 118 143;
+  --accent: 230 52 136;
+  --accent-2: 150 60 230;
+  --gold: 214 112 56;
   --success: 5 150 105;
-  --danger: 200 40 40;
-  --year-1: 208 36 58;
-  --year-2: 67 92 230;
-  --grid-line: 10 12 20;
-  --piece-light: 40 44 58;
-  --grid-alpha: 0.05;
-  --noise-alpha: 0.03;
+  --danger: 210 40 60;
+  --year-1: 118 92 230;
+  --year-2: 230 52 136;
+  --dot: 230 52 136;
+  --dot-alpha: 0.1;
+  --noise-alpha: 0.025;
 }
 
 html {
@@ -179,24 +181,20 @@ button {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Фон: сетка «доски», светящиеся сферы, шум                           */
+/*  Фон: розовый горошек, светящиеся сферы, лепестки, искры, шум        */
 /* ------------------------------------------------------------------ */
 
-.bg-grid {
-  background-image: linear-gradient(rgb(var(--grid-line) / var(--grid-alpha)) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--grid-line) / var(--grid-alpha)) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
-  animation: grid-drift 30s linear infinite;
+.bg-dots {
+  background-image: radial-gradient(rgb(var(--dot) / var(--dot-alpha)) 1.4px, transparent 1.6px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse 85% 65% at 50% 0%, black 25%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 65% at 50% 0%, black 25%, transparent 78%);
+  animation: dots-drift 40s linear infinite;
 }
 
-@keyframes grid-drift {
-  from {
-    background-position: 0 0, 0 0;
-  }
+@keyframes dots-drift {
   to {
-    background-position: 0 64px, 64px 0;
+    background-position: 26px 52px;
   }
 }
 
@@ -231,13 +229,74 @@ button {
   }
 }
 
-@keyframes float-piece {
+/* Лепесток: скруглённая «капля», падает с покачиванием. */
+.petal {
+  position: absolute;
+  top: -6vh;
+  width: var(--size, 14px);
+  height: calc(var(--size, 14px) * 0.78);
+  border-radius: 100% 0 100% 0;
+  background: linear-gradient(135deg, rgb(255 214 232), rgb(var(--accent) / 0.85));
+  opacity: var(--alpha, 0.55);
+  box-shadow: 0 0 12px rgb(var(--accent) / 0.25);
+  animation: petal-fall var(--duration, 16s) linear var(--delay, 0s) infinite;
+  will-change: transform;
+}
+
+@keyframes petal-fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate3d(var(--sway, 40px), 28vh, 0) rotate(90deg);
+  }
+  50% {
+    transform: translate3d(calc(var(--sway, 40px) * -0.6), 56vh, 0) rotate(200deg);
+  }
+  75% {
+    transform: translate3d(var(--sway, 40px), 84vh, 0) rotate(290deg);
+  }
+  100% {
+    transform: translate3d(0, 114vh, 0) rotate(380deg);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(0.4) rotate(0deg);
+    opacity: 0;
+  }
+  45%,
+  55% {
+    transform: scale(1) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.14);
+  }
+  30% {
+    transform: scale(0.96);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes float-soft {
   0%,
   100% {
     transform: translate3d(0, 0, 0) rotate(var(--r, 0deg));
   }
   50% {
-    transform: translate3d(0, -18px, 0) rotate(calc(var(--r, 0deg) + 6deg));
+    transform: translate3d(0, -16px, 0) rotate(calc(var(--r, 0deg) + 5deg));
   }
 }
 
@@ -248,6 +307,72 @@ button {
   }
   50% {
     transform: translate3d(0, -10px, 0);
+  }
+}
+
+/* Глитч: милая надпись на мгновение «ломается» — намёк на двойное дно. */
+.glitch {
+  position: relative;
+  display: inline-block;
+}
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+.glitch::before {
+  color: rgb(var(--accent));
+  animation: glitch-a 6s steps(1) infinite;
+}
+.glitch::after {
+  color: rgb(120 220 255);
+  animation: glitch-b 6s steps(1) infinite;
+}
+
+@keyframes glitch-a {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+    transform: none;
+    clip-path: none;
+  }
+  89% {
+    opacity: 0.9;
+    transform: translate(-4px, 1px);
+    clip-path: inset(10% 0 55% 0);
+  }
+  91% {
+    opacity: 0.9;
+    transform: translate(3px, -1px);
+    clip-path: inset(60% 0 8% 0);
+  }
+  93% {
+    opacity: 0.8;
+    transform: translate(-2px, 0);
+    clip-path: inset(30% 0 40% 0);
+  }
+}
+@keyframes glitch-b {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+    transform: none;
+    clip-path: none;
+  }
+  90% {
+    opacity: 0.8;
+    transform: translate(4px, -1px);
+    clip-path: inset(50% 0 20% 0);
+  }
+  92% {
+    opacity: 0.8;
+    transform: translate(-3px, 1px);
+    clip-path: inset(5% 0 70% 0);
   }
 }
 
@@ -343,16 +468,16 @@ mark,
    кнопки внутри страницы чтения совпадали с цветом бумаги. */
 .reader-root[data-reader-theme='night'] {
   color-scheme: dark;
-  --bg: 12 13 18;
-  --bg-elev: 17 19 26;
-  --surface: 20 22 30;
-  --surface-2: 28 31 41;
-  --line: 40 44 56;
-  --ink: 214 216 224;
-  --ink-2: 170 175 190;
-  --muted: 125 130 146;
-  --accent: 239 68 86;
-  --gold: 232 178 80;
+  --bg: 16 11 20;
+  --bg-elev: 22 16 27;
+  --surface: 26 19 31;
+  --surface-2: 36 27 42;
+  --line: 50 38 56;
+  --ink: 230 219 227;
+  --ink-2: 186 170 182;
+  --muted: 140 122 136;
+  --accent: 255 104 170;
+  --gold: 255 186 140;
 }
 .reader-root[data-reader-theme='day'] {
   color-scheme: light;
@@ -364,8 +489,8 @@ mark,
   --ink: 28 30 36;
   --ink-2: 70 74 86;
   --muted: 118 122 134;
-  --accent: 208 36 58;
-  --gold: 170 118 22;
+  --accent: 222 50 132;
+  --gold: 204 104 50;
 }
 .reader-root[data-reader-theme='sepia'] {
   color-scheme: light;
@@ -377,8 +502,8 @@ mark,
   --ink: 64 48 30;
   --ink-2: 98 78 54;
   --muted: 134 112 84;
-  --accent: 184 58 44;
-  --gold: 150 105 20;
+  --accent: 196 58 108;
+  --gold: 168 96 40;
 }
 .reader-root[data-reader-theme='oled'] {
   color-scheme: dark;
@@ -390,8 +515,8 @@ mark,
   --ink: 196 198 206;
   --ink-2: 150 154 164;
   --muted: 110 114 126;
-  --accent: 239 68 86;
-  --gold: 232 178 80;
+  --accent: 255 104 170;
+  --gold: 255 186 140;
 }
 
 .reader-text {

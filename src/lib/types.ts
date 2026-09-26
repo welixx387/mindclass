@@ -1,4 +1,4 @@
-import type { PieceName } from '../data/catalog'
+import type { AvatarMotif } from '../data/motifs'
 
 export type ClassLetter = 'A' | 'B' | 'C' | 'D'
 export type Role = 'reader' | 'moderator' | 'admin'
@@ -7,7 +7,8 @@ export interface Profile {
   id: string
   username: string
   class_letter: ClassLetter
-  avatar_piece: PieceName
+  /** Значок аватара (колонка называется avatar_piece по историческим причинам). */
+  avatar_piece: AvatarMotif
   avatar_color: string
   bio: string
   role: Role

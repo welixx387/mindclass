@@ -5,10 +5,10 @@ import { Link } from 'react-router-dom'
 import { useLatestChapters, useVolumeStats } from '../api/chapters'
 import { useRecentComments } from '../api/comments'
 import { useProgressList } from '../api/library'
-import { ChessPiece } from '../components/brand/ChessPiece'
+import { SparkleShape } from '../components/brand/Motif'
 import { TiltCard } from '../components/catalog/VolumeCard'
 import { VolumeCover } from '../components/catalog/VolumeCover'
-import { HeroBoard } from '../components/home/HeroBoard'
+import { HeroArt } from '../components/home/HeroArt'
 import { QuoteRotator } from '../components/home/QuoteRotator'
 import { Avatar, ClassBadge, CLASS_INFO } from '../components/ui/Avatar'
 import { CountUp, ProgressRing, Reveal, SectionTitle } from '../components/ui/misc'
@@ -26,7 +26,7 @@ const EASE = [0.22, 1, 0.36, 1] as const
 function Hero() {
   const { data: stats } = useVolumeStats()
   const totalChapters = useMemo(() => [...(stats?.values() ?? [])].reduce((sum, s) => sum + s.chapters, 0), [stats])
-  const words = ['Читай.', 'Анализируй.', 'Побеждай.']
+  const words = ['Мило.', 'Опасно.', 'Интересно.']
 
   return (
     <section className="container-page relative grid items-center gap-10 pb-12 pt-10 lg:grid-cols-[1.05fr_1fr] lg:pb-20 lg:pt-16">
@@ -49,7 +49,13 @@ function Hero() {
                 animate={{ y: 0 }}
                 transition={{ duration: 0.9, delay: 0.1 + i * 0.12, ease: EASE }}
               >
-                {word}
+                {i === 1 ? (
+                  <span className="glitch" data-text={word}>
+                    {word}
+                  </span>
+                ) : (
+                  word
+                )}
               </motion.span>
             </span>
           ))}
@@ -104,7 +110,7 @@ function Hero() {
         </motion.div>
       </div>
 
-      <HeroBoard />
+      <HeroArt />
     </section>
   )
 }
@@ -129,7 +135,7 @@ function ContinueReading() {
               <VolumeCover volume={volume} showMeta={false} />
             ) : (
               <div className="flex aspect-[5/7] items-center justify-center bg-surface-2 text-accent">
-                <ChessPiece piece="knight" size={28} />
+                <SparkleShape size={26} />
               </div>
             )}
           </div>
@@ -299,7 +305,7 @@ function RecentComments() {
           <Reveal key={c.id} delay={i * 0.05}>
             <Link to={c.href} className="card group flex h-full flex-col p-5 transition-colors hover:border-accent/35">
               <div className="flex items-center gap-3">
-                <Avatar piece={c.author?.avatar_piece ?? 'pawn'} color={c.author?.avatar_color ?? 'graphite'} size={34} />
+                <Avatar motif={c.author?.avatar_piece ?? 'heart'} color={c.author?.avatar_color ?? 'graphite'} size={34} />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{c.author?.username ?? 'Читатель'}</p>
                   <p className="text-xs text-muted">{timeAgo(c.created_at)}</p>
@@ -326,7 +332,7 @@ function JoinCta() {
     <section className="container-page mt-24">
       <Reveal>
         <div className="card relative overflow-hidden p-8 sm:p-12">
-          <div className="bg-grid pointer-events-none absolute inset-0 opacity-60" />
+          <div className="bg-dots pointer-events-none absolute inset-0 opacity-70 [mask-image:none]" />
           <div className="relative grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]">
             <div>
               <p className="eyebrow">Регистрация</p>

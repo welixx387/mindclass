@@ -3,13 +3,14 @@ import { BookOpen, Check, History, Loader2, LogOut, MessageCircle, Settings2 } f
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useProgressList } from '../api/library'
-import { ChessPiece, PIECE_NAMES, PIECE_ORDER } from '../components/brand/ChessPiece'
+import { Motif } from '../components/brand/Motif'
 import { CommentFeed } from '../components/profile/CommentFeed'
 import { ProfileHeader } from '../components/profile/ProfileHeader'
 import { AVATAR_COLOR_IDS, AVATAR_COLORS, CLASS_INFO } from '../components/ui/Avatar'
 import { EmptyState, PageLoader } from '../components/ui/misc'
 import { toast } from '../components/ui/Toaster'
-import { getVolume, volumeFullTitle, type PieceName } from '../data/catalog'
+import { getVolume, volumeFullTitle } from '../data/catalog'
+import { AVATAR_MOTIFS, MOTIF_LABELS, type AvatarMotif } from '../data/motifs'
 import { DEMO_CHAPTER } from '../data/demoChapter'
 import { timeAgo } from '../lib/format'
 import type { ClassLetter } from '../lib/types'
@@ -82,7 +83,7 @@ function SettingsForm() {
   const [username, setUsername] = useState(profile.username)
   const [bio, setBio] = useState(profile.bio)
   const [classLetter, setClassLetter] = useState<ClassLetter>(profile.class_letter)
-  const [piece, setPiece] = useState<PieceName>(profile.avatar_piece)
+  const [motif, setMotif] = useState<AvatarMotif>(profile.avatar_piece)
   const [color, setColor] = useState(profile.avatar_color)
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileError, setProfileError] = useState<string | null>(null)
@@ -96,7 +97,7 @@ function SettingsForm() {
     e.preventDefault()
     setProfileError(null)
     setSavingProfile(true)
-    const err = await updateProfile({ username: username.trim(), bio: bio.trim(), class_letter: classLetter, avatar_piece: piece, avatar_color: color })
+    const err = await updateProfile({ username: username.trim(), bio: bio.trim(), class_letter: classLetter, avatar_piece: motif, avatar_color: color })
     setSavingProfile(false)
     if (err) setProfileError(err)
     else toast.success('Профиль сохранён')
@@ -157,15 +158,16 @@ function SettingsForm() {
         <div>
           <p className="mb-2 text-sm font-semibold">Аватар</p>
           <div className="grid grid-cols-6 gap-2">
-            {PIECE_ORDER.map((p) => (
+            {AVATAR_MOTIFS.map((m) => (
               <button
                 type="button"
-                key={p}
-                onClick={() => setPiece(p)}
-                title={PIECE_NAMES[p]}
-                className={`flex aspect-square items-center justify-center rounded-xl border transition-colors ${piece === p ? 'border-accent bg-accent/10 text-accent' : 'border-line text-ink-2 hover:text-ink'}`}
+                key={m}
+                onClick={() => setMotif(m)}
+                title={MOTIF_LABELS[m]}
+                aria-label={MOTIF_LABELS[m]}
+                className={`flex aspect-square items-center justify-center rounded-xl border transition-colors ${motif === m ? 'border-accent bg-accent/10 text-accent' : 'border-line text-ink-2 hover:text-ink'}`}
               >
-                <ChessPiece piece={p} size={20} />
+                <Motif name={m} size={20} />
               </button>
             ))}
           </div>

@@ -32,5 +32,5 @@ export function applyTheme(theme: SiteTheme) {
   const root = document.documentElement
   root.dataset.theme = theme
   const meta = document.querySelector('meta[name="theme-color"]')
-  meta?.setAttribute('content', theme === 'dark' ? '#07080c' : '#f5f5f2')
+  meta?.setAttribute('content', theme === 'dark' ? '#0d0810' : '#fef7fb')
 }

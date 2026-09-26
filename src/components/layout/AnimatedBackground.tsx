@@ -1,19 +1,31 @@
 import { useEffect, useRef } from 'react'
-import type { PieceName } from '../../data/catalog'
-import { ChessPiece } from '../brand/ChessPiece'
+import { SparkleShape } from '../brand/Motif'
 
-const FLOATING: { piece: PieceName; top: string; left: string; size: number; duration: number; delay: number; rotate: number }[] = [
-  { piece: 'knight', top: '14%', left: '6%', size: 84, duration: 11, delay: 0, rotate: -12 },
-  { piece: 'rook', top: '62%', left: '3%', size: 60, duration: 13, delay: 2, rotate: 8 },
-  { piece: 'queen', top: '22%', left: '88%', size: 96, duration: 12, delay: 1, rotate: 10 },
-  { piece: 'pawn', top: '74%', left: '90%', size: 54, duration: 10, delay: 3, rotate: -6 },
-  { piece: 'bishop', top: '46%', left: '94%', size: 48, duration: 14, delay: 4, rotate: 14 },
-  { piece: 'king', top: '86%', left: '48%', size: 64, duration: 15, delay: 2.5, rotate: -4 },
+// Лепестки: позиция по горизонтали, размер, скорость, задержка, амплитуда покачивания.
+const PETALS = [
+  { left: '4%', size: 14, duration: 17, delay: 0, sway: 50, alpha: 0.5 },
+  { left: '13%', size: 10, duration: 21, delay: 6, sway: -40, alpha: 0.4 },
+  { left: '24%', size: 16, duration: 19, delay: 11, sway: 60, alpha: 0.45 },
+  { left: '37%', size: 11, duration: 23, delay: 3, sway: -55, alpha: 0.35 },
+  { left: '49%', size: 13, duration: 18, delay: 14, sway: 45, alpha: 0.45 },
+  { left: '61%', size: 9, duration: 22, delay: 8, sway: -35, alpha: 0.4 },
+  { left: '72%', size: 15, duration: 20, delay: 2, sway: 55, alpha: 0.5 },
+  { left: '83%', size: 12, duration: 24, delay: 12, sway: -45, alpha: 0.4 },
+  { left: '93%', size: 14, duration: 18, delay: 5, sway: 40, alpha: 0.45 },
+]
+
+const SPARKLES = [
+  { top: '12%', left: '8%', size: 14, delay: 0 },
+  { top: '28%', left: '90%', size: 18, delay: 1.4 },
+  { top: '52%', left: '4%', size: 12, delay: 2.2 },
+  { top: '68%', left: '86%', size: 16, delay: 3.1 },
+  { top: '84%', left: '14%', size: 12, delay: 0.8 },
+  { top: '40%', left: '50%', size: 10, delay: 4 },
 ]
 
 /**
- * Фон сайта: медленно плывущая сетка «доски», светящиеся сферы, парящие
- * фигуры и мягкий прожектор за курсором.
+ * Фон сайта: розовый горошек, мягкие светящиеся сферы, падающие лепестки,
+ * мерцающие искры и прожектор за курсором.
  */
 export function AnimatedBackground() {
   const spot = useRef<HTMLDivElement>(null)
@@ -40,37 +52,50 @@ export function AnimatedBackground() {
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <div
         className="orb h-[46vw] w-[46vw] max-h-[620px] max-w-[620px]"
-        style={{ top: '-18%', left: '-10%', background: 'rgb(var(--accent) / 0.16)', animation: 'orb-a 20s ease-in-out infinite' }}
+        style={{ top: '-18%', left: '-10%', background: 'rgb(var(--accent) / 0.2)', animation: 'orb-a 20s ease-in-out infinite' }}
       />
       <div
         className="orb h-[40vw] w-[40vw] max-h-[560px] max-w-[560px]"
-        style={{ top: '8%', right: '-14%', background: 'rgb(var(--year-2) / 0.13)', animation: 'orb-b 24s ease-in-out infinite' }}
+        style={{ top: '6%', right: '-14%', background: 'rgb(var(--accent-2) / 0.14)', animation: 'orb-b 24s ease-in-out infinite' }}
       />
-      <div className="bg-grid absolute inset-0" />
+      <div
+        className="orb h-[30vw] w-[30vw] max-h-[420px] max-w-[420px]"
+        style={{ bottom: '-12%', left: '30%', background: 'rgb(var(--gold) / 0.1)', animation: 'orb-a 28s ease-in-out infinite reverse' }}
+      />
+      <div className="bg-dots absolute inset-0" />
       <div
         ref={spot}
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(420px circle at var(--x, 50%) var(--y, -20%), rgb(var(--accent) / 0.07), transparent 70%)',
+          background: 'radial-gradient(420px circle at var(--x, 50%) var(--y, -20%), rgb(var(--accent) / 0.08), transparent 70%)',
         }}
       />
-      {FLOATING.map((f, i) => (
-        <div
-          key={i}
-          className="absolute hidden text-ink md:block"
-          style={
-            {
-              top: f.top,
-              left: f.left,
-              opacity: 0.06,
-              '--r': `${f.rotate}deg`,
-              animation: `float-piece ${f.duration}s ease-in-out ${f.delay}s infinite`,
-            } as React.CSSProperties
-          }
-        >
-          <ChessPiece piece={f.piece} size={f.size} strokeWidth={1.1} />
-        </div>
-      ))}
+      <div className="motion-reduce:hidden">
+        {PETALS.map((p, i) => (
+          <span
+            key={i}
+            className={`petal ${i % 3 === 2 ? 'hidden md:block' : ''}`}
+            style={
+              {
+                left: p.left,
+                '--size': `${p.size}px`,
+                '--duration': `${p.duration}s`,
+                '--delay': `-${p.delay}s`,
+                '--sway': `${p.sway}px`,
+                '--alpha': p.alpha,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+        {SPARKLES.map((s, i) => (
+          <SparkleShape
+            key={i}
+            size={s.size}
+            className="absolute hidden text-accent md:block"
+            style={{ top: s.top, left: s.left, opacity: 0, animation: `twinkle 4.8s ease-in-out ${s.delay}s infinite` }}
+          />
+        ))}
+      </div>
       <div className="bg-noise absolute inset-0" />
     </div>
   )

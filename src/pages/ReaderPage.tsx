@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Expand,
+  HeartCrack,
   List,
   MessageSquareText,
   Minimize,
@@ -20,7 +21,6 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { CHAPTER_META_COLUMNS, useChapter, useChapterNeighbors } from '../api/chapters'
 import { chapterTarget } from '../api/comments'
 import { useBookmarkActions, useBookmarks, useProgressList, useSaveProgress } from '../api/library'
-import { ChessPiece } from '../components/brand/ChessPiece'
 import { CommentSection } from '../components/comments/CommentSection'
 import { ChapterText } from '../components/reader/ChapterText'
 import { ReaderSettingsPanel } from '../components/reader/ReaderSettingsPanel'
@@ -39,7 +39,7 @@ import { translateError } from '../store/auth'
 import { READER_FONTS, useReaderSettings } from '../store/readerSettings'
 import { useUi } from '../store/ui'
 
-const THEME_BG: Record<string, string> = { night: '#0c0d12', day: '#fafaf7', sepia: '#f4ecd8', oled: '#000000' }
+const THEME_BG: Record<string, string> = { night: '#100b14', day: '#fafaf7', sepia: '#f4ecd8', oled: '#000000' }
 
 function useReaderTheme() {
   const theme = useReaderSettings((s) => s.theme)
@@ -95,7 +95,7 @@ export default function ReaderPage({ demo = false }: { demo?: boolean }) {
 function ReaderMessage({ title, text }: { title: string; text: string }) {
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center px-6 text-center">
-      <ChessPiece piece="king" size={56} strokeWidth={1.2} className="opacity-40" />
+      <HeartCrack size={56} strokeWidth={1.2} className="opacity-40" />
       <h1 className="mt-6 font-display text-2xl font-semibold">{title}</h1>
       <p className="mt-2 max-w-md text-sm opacity-70">{text}</p>
       <Link to="/" className="btn-primary mt-8">

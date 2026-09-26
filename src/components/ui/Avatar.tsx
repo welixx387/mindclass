@@ -1,52 +1,51 @@
-import type { PieceName } from '../../data/catalog'
+import type { AvatarMotif } from '../../data/motifs'
 import type { ClassLetter, ProfileSummary } from '../../lib/types'
-import { ChessPiece } from '../brand/ChessPiece'
+import { Motif } from '../brand/Motif'
 
 export const AVATAR_COLORS: Record<string, { label: string; from: string; to: string }> = {
-  crimson: { label: 'Багровый', from: '#f0506a', to: '#8f1733' },
-  gold: { label: 'Золото', from: '#f1c46b', to: '#a8650f' },
+  rose: { label: 'Сакура', from: '#ffb3d1', to: '#e0337f' },
+  crimson: { label: 'Малина', from: '#ff6f98', to: '#a3124a' },
+  peach: { label: 'Персик', from: '#ffd2b0', to: '#f07a4f' },
+  lilac: { label: 'Сирень', from: '#e2c6ff', to: '#8f55e8' },
   violet: { label: 'Фиалка', from: '#b69cff', to: '#5b2fd0' },
-  sapphire: { label: 'Сапфир', from: '#7c93ff', to: '#2c3aa8' },
-  emerald: { label: 'Изумруд', from: '#4ade9f', to: '#067255' },
-  cyan: { label: 'Лёд', from: '#5fe0f5', to: '#0b6f8a' },
-  rose: { label: 'Сакура', from: '#ff9bb3', to: '#c0305e' },
-  graphite: { label: 'Графит', from: '#a3a9b8', to: '#353a47' },
+  sapphire: { label: 'Сапфир', from: '#9fb0ff', to: '#3a47c2' },
+  cyan: { label: 'Лёд', from: '#9df0ff', to: '#1b8fb0' },
+  emerald: { label: 'Мята', from: '#9ff2cb', to: '#119270' },
+  gold: { label: 'Золото', from: '#ffe19a', to: '#c7841a' },
+  graphite: { label: 'Графит', from: '#b9b1c2', to: '#4a4152' },
 }
 
 export const AVATAR_COLOR_IDS = Object.keys(AVATAR_COLORS)
 
 export function avatarGradient(color: string): string {
-  const c = AVATAR_COLORS[color] ?? AVATAR_COLORS.crimson
+  const c = AVATAR_COLORS[color] ?? AVATAR_COLORS.rose
   return `linear-gradient(140deg, ${c.from}, ${c.to})`
 }
 
 export function Avatar({
-  piece,
+  motif,
   color,
   size = 40,
   className = '',
-  ring = false,
 }: {
-  piece: PieceName
+  motif: AvatarMotif
   color: string
   size?: number
   className?: string
-  ring?: boolean
 }) {
   return (
     <span
-      className={`relative inline-flex shrink-0 items-center justify-center rounded-full text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] ${
-        ring ? 'ring-2 ring-bg ring-offset-2 ring-offset-accent/60' : ''
-      } ${className}`}
+      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] ${className}`}
       style={{ width: size, height: size, background: avatarGradient(color) }}
     >
-      <ChessPiece piece={piece} size={size * 0.52} strokeWidth={2} />
+      <span className="pointer-events-none absolute -left-1/4 -top-1/4 h-3/4 w-3/4 rounded-full bg-white/25 blur-[6px]" />
+      <Motif name={motif} size={size * 0.5} strokeWidth={2.2} className="relative drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]" />
     </span>
   )
 }
 
 export function ProfileAvatar({ profile, size = 40 }: { profile: Pick<ProfileSummary, 'avatar_piece' | 'avatar_color'> | null; size?: number }) {
-  return <Avatar piece={profile?.avatar_piece ?? 'pawn'} color={profile?.avatar_color ?? 'graphite'} size={size} />
+  return <Avatar motif={profile?.avatar_piece ?? 'heart'} color={profile?.avatar_color ?? 'graphite'} size={size} />
 }
 
 export const CLASS_INFO: Record<ClassLetter, { color: string; motto: string }> = {

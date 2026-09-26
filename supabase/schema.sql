@@ -28,20 +28,39 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   username text not null,
   class_letter text not null default 'D',
-  avatar_piece text not null default 'pawn',
-  avatar_color text not null default 'crimson',
+  avatar_piece text not null default 'heart',
+  avatar_color text not null default 'rose',
   bio text not null default '',
   role text not null default 'reader',
   created_at timestamptz not null default now(),
   constraint profiles_username_format check (username ~ '^[A-Za-zА-Яа-яЁё0-9_.-]{3,24}$'),
   constraint profiles_class_letter check (class_letter in ('A', 'B', 'C', 'D')),
-  constraint profiles_avatar_piece check (avatar_piece in ('pawn', 'knight', 'bishop', 'rook', 'queen', 'king')),
+  constraint profiles_avatar_piece check (avatar_piece in ('heart', 'star', 'sparkles', 'flower', 'ribbon', 'cherry')),
   constraint profiles_avatar_color check (avatar_color ~ '^[a-z]{3,16}$'),
   constraint profiles_bio_length check (char_length(bio) <= 280),
   constraint profiles_role check (role in ('reader', 'moderator', 'admin'))
 );
 
 create unique index if not exists profiles_username_lower_idx on public.profiles (lower(username));
+
+-- Значки аватаров: переход со старых шахматных фигур на новые мотивы
+-- (нужен только базам, созданным прошлой версией схемы; повторный запуск безопасен).
+alter table public.profiles drop constraint if exists profiles_avatar_piece;
+update public.profiles
+set avatar_piece = case avatar_piece
+  when 'pawn' then 'heart'
+  when 'knight' then 'star'
+  when 'bishop' then 'sparkles'
+  when 'rook' then 'flower'
+  when 'queen' then 'ribbon'
+  when 'king' then 'cherry'
+  else avatar_piece
+end
+where avatar_piece in ('pawn', 'knight', 'bishop', 'rook', 'queen', 'king');
+alter table public.profiles
+  add constraint profiles_avatar_piece check (avatar_piece in ('heart', 'star', 'sparkles', 'flower', 'ribbon', 'cherry'));
+alter table public.profiles alter column avatar_piece set default 'heart';
+alter table public.profiles alter column avatar_color set default 'rose';
 
 alter table public.profiles enable row level security;
 
@@ -91,8 +110,8 @@ declare
   base_name text := trim(coalesce(meta ->> 'username', ''));
   final_name text;
   cls text := upper(coalesce(meta ->> 'class_letter', 'D'));
-  piece text := coalesce(meta ->> 'avatar_piece', 'pawn');
-  color text := coalesce(meta ->> 'avatar_color', 'crimson');
+  piece text := coalesce(meta ->> 'avatar_piece', 'heart');
+  color text := coalesce(meta ->> 'avatar_color', 'rose');
   attempt int := 0;
 begin
   if base_name !~ '^[A-Za-zА-Яа-яЁё0-9_.-]{3,24}$' then
@@ -106,8 +125,8 @@ begin
   end loop;
 
   if cls not in ('A', 'B', 'C', 'D') then cls := 'D'; end if;
-  if piece not in ('pawn', 'knight', 'bishop', 'rook', 'queen', 'king') then piece := 'pawn'; end if;
-  if color !~ '^[a-z]{3,16}$' then color := 'crimson'; end if;
+  if piece not in ('heart', 'star', 'sparkles', 'flower', 'ribbon', 'cherry') then piece := 'heart'; end if;
+  if color !~ '^[a-z]{3,16}$' then color := 'rose'; end if;
 
   insert into public.profiles (id, username, class_letter, avatar_piece, avatar_color)
   values (new.id, final_name, cls, piece, color)

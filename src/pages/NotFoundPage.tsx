@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { ChessPiece } from '../components/brand/ChessPiece'
+import { HeartCrack } from 'lucide-react'
 
 export default function NotFoundPage() {
   return (
@@ -19,11 +19,11 @@ export default function NotFoundPage() {
           animate={{ y: 0, opacity: 1, rotate: 12 }}
           transition={{ type: 'spring', stiffness: 160, damping: 10, delay: 0.2 }}
         >
-          <ChessPiece piece="king" size={84} strokeWidth={1.3} />
+          <HeartCrack size={84} strokeWidth={1.3} />
         </motion.div>
       </div>
       <h1 className="mt-6 font-display text-2xl font-semibold">Эта комната пуста</h1>
-      <p className="mt-2 max-w-md text-sm text-ink-2">Страница не найдена. Похоже, этот ход не предусмотрен правилами.</p>
+      <p className="mt-2 max-w-md text-sm text-ink-2">Страница не найдена. Кажется, кто-то подшутил над ссылкой.</p>
       <div className="mt-8 flex gap-3">
         <Link to="/" className="btn-primary">
           На главную

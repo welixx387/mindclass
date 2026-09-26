@@ -21,7 +21,7 @@ export function ProfileHeader({ profile, actions }: { profile: Profile; actions?
       <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-transparent to-surface" />
       <div className="relative flex flex-col gap-6 p-6 pt-12 sm:flex-row sm:items-end sm:p-8 sm:pt-14">
         <motion.div initial={{ scale: 0.6, rotate: -25, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}>
-          <Avatar piece={profile.avatar_piece} color={profile.avatar_color} size={96} className="ring-4 ring-surface" />
+          <Avatar motif={profile.avatar_piece} color={profile.avatar_color} size={96} className="ring-4 ring-surface" />
         </motion.div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

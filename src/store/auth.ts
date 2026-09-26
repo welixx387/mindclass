@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { Session, User } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import type { ClassLetter, Profile } from '../lib/types'
-import type { PieceName } from '../data/catalog'
+import type { AvatarMotif } from '../data/motifs'
 
 export type AuthStatus = 'disabled' | 'loading' | 'signed-in' | 'signed-out'
 
@@ -43,7 +43,7 @@ export interface SignUpInput {
   password: string
   username: string
   classLetter: ClassLetter
-  avatarPiece: PieceName
+  avatarMotif: AvatarMotif
   avatarColor: string
 }
 
@@ -123,7 +123,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
     return error ? translateError(error) : null
   },
 
-  signUp: async ({ email, password, username, classLetter, avatarPiece, avatarColor }) => {
+  signUp: async ({ email, password, username, classLetter, avatarMotif, avatarColor }) => {
     if (!supabase) return { error: 'Регистрация недоступна: Supabase не настроен', needsConfirmation: false }
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -133,7 +133,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
         data: {
           username: username.trim(),
           class_letter: classLetter,
-          avatar_piece: avatarPiece,
+          avatar_piece: avatarMotif,
           avatar_color: avatarColor,
         },
       },
