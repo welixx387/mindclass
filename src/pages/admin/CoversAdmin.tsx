@@ -8,7 +8,6 @@ import { confirmDialog } from '../../components/ui/Overlay'
 import { PageLoader } from '../../components/ui/misc'
 import { toast } from '../../components/ui/Toaster'
 import { volumeFullTitle, YEARS, type Volume } from '../../data/catalog'
-import { WIKI_COVERS } from '../../data/wikiCovers'
 import type { VolumeCoversMap } from '../../lib/volumeCovers'
 import { translateError } from '../../store/auth'
 
@@ -48,7 +47,7 @@ function CoverTile({ volume, covers }: { volume: Volume; covers: VolumeCoversMap
     if (!current) return
     const ok = await confirmDialog({
       title: 'Убрать обложку?',
-      description: `${title}: ${WIKI_COVERS[volume.slug] ? 'вернётся обложка издания с вики' : 'вместо картинки снова будет узор'}.`,
+      description: `${title}: вместо картинки снова будет узор.`,
       confirmLabel: 'Убрать',
       danger: true,
     })
@@ -114,7 +113,7 @@ function CoverTile({ volume, covers }: { volume: Volume; covers: VolumeCoversMap
       <div className="mt-2 flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">Том {volume.number}</p>
-          <p className="truncate text-xs text-muted">{current ? 'своя обложка' : WIKI_COVERS[volume.slug] ? 'обложка с вики' : 'узор'}</p>
+          <p className="truncate text-xs text-muted">{current ? 'своя обложка' : 'узор'}</p>
         </div>
         {current && (
           <button
@@ -147,9 +146,8 @@ export default function CoversAdmin() {
     <div>
       <h1 className="font-display text-2xl font-semibold">Обложки томов</h1>
       <p className="mt-2 max-w-2xl text-sm text-ink-2">
-        Сейчас у томов стоят обложки японского издания с You-Zitsu Wiki. Чтобы поставить свою, нажмите на том или перетащите на него
-        картинку: она станет фоном обложки в каталоге, на странице тома и в закладках, а надписи «Том», номер и название останутся поверх
-        неё. Лучше всего подходят вертикальные картинки с пропорциями примерно 5:7, до {MAX_MB} МБ.
+        Нажмите на том или перетащите на него картинку. Она станет фоном обложки в каталоге, на странице тома и в закладках, а надписи
+        «Том», номер и название останутся поверх неё. Лучше всего подходят вертикальные картинки с пропорциями примерно 5:7, до {MAX_MB} МБ.
       </p>
       <p className="mt-3 max-w-2xl rounded-xl bg-surface-2 px-4 py-3 text-xs leading-relaxed text-ink-2">
         Загружайте только изображения, которые вам можно публиковать.
