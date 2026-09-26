@@ -1,6 +1,4 @@
-import type { AvatarMotif } from '../../data/motifs'
 import type { ClassLetter, ProfileSummary } from '../../lib/types'
-import { Motif } from '../brand/Motif'
 
 export const AVATAR_COLORS: Record<string, { label: string; from: string; to: string }> = {
   rose: { label: 'Сакура', from: '#ffb3d1', to: '#e0337f' },
@@ -22,30 +20,38 @@ export function avatarGradient(color: string): string {
   return `linear-gradient(140deg, ${c.from}, ${c.to})`
 }
 
+/** Первая буква или цифра ника — она и будет на аватаре. */
+export function initialOf(name: string | null | undefined): string {
+  const match = (name ?? '').match(/[\p{L}\p{N}]/u)
+  return match ? match[0].toUpperCase() : '?'
+}
+
+/** Аватар — инициал ника на цветном градиенте. */
 export function Avatar({
-  motif,
+  name,
   color,
   size = 40,
   className = '',
 }: {
-  motif: AvatarMotif
+  name: string | null | undefined
   color: string
   size?: number
   className?: string
 }) {
   return (
     <span
-      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] ${className}`}
-      style={{ width: size, height: size, background: avatarGradient(color) }}
+      aria-hidden="true"
+      className={`relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full font-display font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] ${className}`}
+      style={{ width: size, height: size, background: avatarGradient(color), fontSize: Math.round(size * 0.42) }}
     >
       <span className="pointer-events-none absolute -left-1/4 -top-1/4 h-3/4 w-3/4 rounded-full bg-white/25 blur-[6px]" />
-      <Motif name={motif} size={size * 0.5} strokeWidth={2.2} className="relative drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]" />
+      <span className="relative leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">{initialOf(name)}</span>
     </span>
   )
 }
 
-export function ProfileAvatar({ profile, size = 40 }: { profile: Pick<ProfileSummary, 'avatar_piece' | 'avatar_color'> | null; size?: number }) {
-  return <Avatar motif={profile?.avatar_piece ?? 'heart'} color={profile?.avatar_color ?? 'graphite'} size={size} />
+export function ProfileAvatar({ profile, size = 40 }: { profile: Pick<ProfileSummary, 'username' | 'avatar_color'> | null; size?: number }) {
+  return <Avatar name={profile?.username} color={profile?.avatar_color ?? 'graphite'} size={size} />
 }
 
 export const CLASS_INFO: Record<ClassLetter, { color: string; motto: string }> = {

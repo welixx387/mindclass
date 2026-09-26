@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { ALL_VOLUMES, adjacentVolumes, getVolume, YEARS } from './catalog'
-import { AVATAR_MOTIFS, MOTIF_LABELS } from './motifs'
 
 describe('catalog', () => {
   it('lists every volume of the first and second year', () => {
@@ -18,12 +17,11 @@ describe('catalog', () => {
     expect(getVolume('y1-v11')?.kind).toBe('main')
   })
 
-  it('gives every volume a known motif and a description', () => {
+  it('gives every volume a theme and a description', () => {
     for (const v of ALL_VOLUMES) {
-      expect(MOTIF_LABELS[v.motif]).toBeTruthy()
+      expect(v.theme.trim()).not.toBe('')
       expect(v.description.length).toBeGreaterThan(20)
     }
-    for (const m of AVATAR_MOTIFS) expect(MOTIF_LABELS[m]).toBeTruthy()
   })
 
   it('links volumes across the year boundary', () => {

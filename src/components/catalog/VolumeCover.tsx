@@ -1,10 +1,9 @@
 import { memo, useId, useMemo } from 'react'
 import { getYear, volumeIndexInYear, type Volume } from '../../data/catalog'
-import { Motif } from '../brand/Motif'
 
 /**
  * Обложка тома, нарисованная кодом: горошек, глянцевый блик, лента с годом,
- * большой номер и значок тома. Основные тома — насыщенные (1 год — сиреневый,
+ * большой номер и орнамент-розетка, у каждого тома свой. Основные тома — насыщенные (1 год — сиреневый,
  * 2 год — розовый), половинные (сборники историй) — светлые.
  * Если у тома указан `cover`, показывается картинка.
  */
@@ -14,10 +13,41 @@ const YEAR_HUE: Record<number, number> = { 1: 268, 2: 332, 3: 20 }
 const W = 300
 const H = 420
 
-const SPARKLE_PATH = 'M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0Z'
-const HEART_PATH = 'M12 21C5 16 1 12.4 1 8 1 4.7 3.6 2 6.8 2c2.1 0 3.9 1.1 5.2 2.9C13.3 3.1 15.1 2 17.2 2 20.4 2 23 4.7 23 8c0 4.4-4 8-11 13Z'
+// Центр орнамента.
+const CX = W / 2
+const CY = 214
 
-// Россыпь мелкого декора: у каждого тома своя, но всегда одинаковая.
+/** Розетка: тонкие эллипсы вокруг общего центра, как гильош на банкноте. */
+function Rosette({
+  r,
+  petals,
+  squash,
+  color,
+  width,
+  turn = 0,
+}: {
+  r: number
+  petals: number
+  /** Насколько сплющен каждый эллипс: чем меньше, тем тоньше лепестки. */
+  squash: number
+  color: string
+  width: number
+  turn?: number
+}) {
+  const step = 180 / petals
+  return (
+    <g fill="none" stroke={color} strokeWidth={width}>
+      {Array.from({ length: petals }, (_, i) => (
+        <ellipse key={i} cx={CX} cy={CY} rx={r} ry={r * squash} transform={`rotate(${turn + i * step} ${CX} ${CY})`} />
+      ))}
+    </g>
+  )
+}
+
+// Вместе с числом лепестков даёт 12 разных розеток.
+const SQUASH = [0.34, 0.2, 0.5]
+
+// Россыпь мелкого декора — кольца и точки: у каждого тома своя, но всегда одинаковая.
 function decor(index: number) {
   const spots = [
     { x: 40, y: 150, s: 0.7 },
@@ -27,7 +57,7 @@ function decor(index: number) {
     { x: 150, y: 88, s: 0.45 },
     { x: 262, y: 222, s: 0.6 },
   ]
-  return spots.map((spot, i) => ({ ...spot, heart: (i + index) % 3 === 0 })).filter((_, i) => (i + index) % 4 !== 1)
+  return spots.map((spot, i) => ({ ...spot, ring: (i + index) % 3 === 0 })).filter((_, i) => (i + index) % 4 !== 1)
 }
 
 export const VolumeCover = memo(function VolumeCover({
@@ -53,7 +83,7 @@ export const VolumeCover = memo(function VolumeCover({
           glow: `hsl(${hue} 90% 66%)`,
           ink: `hsl(${hue} 45% 20%)`,
           soft: `hsl(${hue} 30% 38% / 0.8)`,
-          motif: `hsl(${hue} 80% 55%)`,
+          ornament: `hsl(${hue} 80% 55%)`,
           dot: `hsl(${hue} 85% 62% / 0.28)`,
           numberFrom: `hsl(${hue} 70% 58%)`,
           numberTo: `hsl(${hue} 65% 38%)`,
@@ -67,7 +97,7 @@ export const VolumeCover = memo(function VolumeCover({
           glow: `hsl(${hue} 95% 70%)`,
           ink: '#ffffff',
           soft: 'rgba(255,255,255,0.72)',
-          motif: '#ffffff',
+          ornament: '#ffffff',
           dot: 'rgba(255,255,255,0.13)',
           numberFrom: '#ffffff',
           numberTo: `hsl(${hue} 100% 88%)`,
@@ -86,6 +116,8 @@ export const VolumeCover = memo(function VolumeCover({
   }
 
   const angle = 20 + (index % 4) * 14
+  const petals = 5 + (index % 4)
+  const squash = SQUASH[index % 3]
   // Длинная тема («Культурный фестиваль») занимает всю нижнюю строку.
   const longTheme = volume.theme.length > 13
 
@@ -140,27 +172,29 @@ export const VolumeCover = memo(function VolumeCover({
         <rect width={W} height={H} fill={`url(#dots${uid})`} mask={`url(#dotsMask${uid})`} />
         <circle cx={W / 2} cy={222} r={150} fill={`url(#glow${uid})`} />
 
-        {/* Кольца вокруг значка */}
+        {/* Кольца вокруг орнамента */}
         <g fill="none" stroke={side ? palette.dot : 'rgba(255,255,255,0.18)'} strokeWidth="1.2">
-          <circle cx={W / 2} cy={214} r={92} />
-          <circle cx={W / 2} cy={214} r={120} strokeDasharray="3 7" />
+          <circle cx={CX} cy={CY} r={92} />
+          <circle cx={CX} cy={CY} r={120} strokeDasharray="3 7" />
         </g>
 
-        {/* Значок тома со свечением */}
+        {/* Орнамент со свечением */}
         <g opacity={side ? 0.45 : 0.85} filter={`url(#blur${uid})`}>
-          <Motif name={volume.motif} x={W / 2 - 70} y={144} width={140} height={140} color={palette.glow} strokeWidth={2.2} />
+          <Rosette r={66} petals={petals} squash={squash} color={palette.glow} width={2.6} />
         </g>
-        <Motif name={volume.motif} x={W / 2 - 70} y={144} width={140} height={140} color={palette.motif} strokeWidth={1.25} />
+        <Rosette r={66} petals={petals} squash={squash} color={palette.ornament} width={1.15} />
+        <Rosette r={34} petals={petals} squash={0.34} color={palette.ornament} width={1} turn={90 / petals} />
+        <circle cx={CX} cy={CY} r={8} fill="none" stroke={palette.ornament} strokeWidth={1.2} />
+        <circle cx={CX} cy={CY} r={2.6} fill={palette.ornament} />
 
-        {/* Мелкие сердечки и искры */}
-        {decor(index).map((d, i) => (
-          <path
-            key={i}
-            d={d.heart ? HEART_PATH : SPARKLE_PATH}
-            fill={palette.decor}
-            transform={`translate(${d.x} ${d.y}) scale(${d.s}) translate(-12 -12)`}
-          />
-        ))}
+        {/* Мелкие кольца и точки */}
+        {decor(index).map((d, i) =>
+          d.ring ? (
+            <circle key={i} cx={d.x} cy={d.y} r={9 * d.s} fill="none" stroke={palette.decor} strokeWidth={1.4} />
+          ) : (
+            <circle key={i} cx={d.x} cy={d.y} r={5 * d.s} fill={palette.decor} />
+          ),
+        )}
 
         {/* Глянцевый блик */}
         <rect x={-W} y={0} width={W * 3} height={70} fill={`url(#shine${uid})`} transform={`rotate(-28 ${W / 2} ${H / 2}) translate(0 ${60 + (index % 3) * 30})`} />

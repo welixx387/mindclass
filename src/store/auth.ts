@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import type { Session, User } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import type { ClassLetter, Profile } from '../lib/types'
-import type { AvatarMotif } from '../data/motifs'
 
 export type AuthStatus = 'disabled' | 'loading' | 'signed-in' | 'signed-out'
 
@@ -43,11 +42,10 @@ export interface SignUpInput {
   password: string
   username: string
   classLetter: ClassLetter
-  avatarMotif: AvatarMotif
   avatarColor: string
 }
 
-type ProfilePatch = Partial<Pick<Profile, 'username' | 'class_letter' | 'avatar_piece' | 'avatar_color' | 'bio'>>
+type ProfilePatch = Partial<Pick<Profile, 'username' | 'class_letter' | 'avatar_color' | 'bio'>>
 
 interface AuthState {
   status: AuthStatus
@@ -73,7 +71,7 @@ async function loadProfile(userId: string): Promise<Profile | null> {
   if (!supabase) return null
   const { data } = await supabase
     .from('profiles')
-    .select('id, username, class_letter, avatar_piece, avatar_color, bio, role, created_at')
+    .select('id, username, class_letter, avatar_color, bio, role, created_at')
     .eq('id', userId)
     .maybeSingle()
   return (data as Profile | null) ?? null
@@ -123,7 +121,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
     return error ? translateError(error) : null
   },
 
-  signUp: async ({ email, password, username, classLetter, avatarMotif, avatarColor }) => {
+  signUp: async ({ email, password, username, classLetter, avatarColor }) => {
     if (!supabase) return { error: 'Регистрация недоступна: Supabase не настроен', needsConfirmation: false }
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -133,7 +131,6 @@ export const useAuth = create<AuthState>()((set, get) => ({
         data: {
           username: username.trim(),
           class_letter: classLetter,
-          avatar_piece: avatarMotif,
           avatar_color: avatarColor,
         },
       },
@@ -180,7 +177,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
       .from('profiles')
       .update(patch)
       .eq('id', profile.id)
-      .select('id, username, class_letter, avatar_piece, avatar_color, bio, role, created_at')
+      .select('id, username, class_letter, avatar_color, bio, role, created_at')
       .single()
     if (error) return translateError(error)
     set({ profile: data as Profile })

@@ -1,11 +1,10 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, BookOpenText, Bookmark, MessagesSquare, Play, Search, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { ArrowRight, BookOpenText, Bookmark, MessagesSquare, Play, Search, SlidersHorizontal } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useLatestChapters, useVolumeStats } from '../api/chapters'
 import { useRecentComments } from '../api/comments'
 import { useProgressList } from '../api/library'
-import { SparkleShape } from '../components/brand/Motif'
 import { TiltCard } from '../components/catalog/VolumeCard'
 import { VolumeCover } from '../components/catalog/VolumeCover'
 import { HeroArt } from '../components/home/HeroArt'
@@ -37,7 +36,7 @@ function Hero() {
           transition={{ duration: 0.6, ease: EASE }}
           className="chip mb-6 border-accent/30 bg-accent/10 text-accent"
         >
-          <Sparkles size={13} /> Ранобэ онлайн · 1 и 2 год обучения
+          <BookOpenText size={13} /> Ранобэ онлайн · 1 и 2 год обучения
         </motion.div>
 
         <h1 className="font-display text-[clamp(32px,10.5vw,44px)] font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-[68px]">
@@ -135,7 +134,7 @@ function ContinueReading() {
               <VolumeCover volume={volume} showMeta={false} />
             ) : (
               <div className="flex aspect-[5/7] items-center justify-center bg-surface-2 text-accent">
-                <SparkleShape size={26} />
+                <BookOpenText size={26} strokeWidth={1.5} />
               </div>
             )}
           </div>
@@ -305,7 +304,7 @@ function RecentComments() {
           <Reveal key={c.id} delay={i * 0.05}>
             <Link to={c.href} className="card group flex h-full flex-col p-5 transition-colors hover:border-accent/35">
               <div className="flex items-center gap-3">
-                <Avatar motif={c.author?.avatar_piece ?? 'heart'} color={c.author?.avatar_color ?? 'graphite'} size={34} />
+                <Avatar name={c.author?.username} color={c.author?.avatar_color ?? 'graphite'} size={34} />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{c.author?.username ?? 'Читатель'}</p>
                   <p className="text-xs text-muted">{timeAgo(c.created_at)}</p>

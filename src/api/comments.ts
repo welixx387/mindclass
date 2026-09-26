@@ -6,7 +6,7 @@ import { useViewerKey } from '../store/auth'
 import { fetchChaptersByIds } from './chapters'
 
 export const COMMENT_COLUMNS =
-  'id, target, user_id, parent_id, body, like_count, created_at, edited_at, author:profiles!comments_user_id_fkey(id, username, class_letter, avatar_piece, avatar_color, role)'
+  'id, target, user_id, parent_id, body, like_count, created_at, edited_at, author:profiles!comments_user_id_fkey(id, username, class_letter, avatar_color, role)'
 
 export type CommentSort = 'new' | 'top' | 'old'
 export const COMMENTS_PAGE = 20

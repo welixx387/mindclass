@@ -290,6 +290,38 @@ button {
   }
 }
 
+/* Талисман: лёгкое покачивание и моргание. */
+/* fill-box: центр считается от самой фигуры, поэтому кадрирование viewBox его не сдвигает. */
+.mascot-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: mascot-sway 7s ease-in-out infinite;
+}
+@keyframes mascot-sway {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-1.2deg) translateY(-3px);
+  }
+}
+.mascot-blink {
+  transform-box: fill-box;
+  transform-origin: 50% 55%;
+  animation: mascot-blink 5.5s ease-in-out infinite;
+}
+@keyframes mascot-blink {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  95.5% {
+    transform: scaleY(0.08);
+  }
+}
+
 @keyframes float-soft {
   0%,
   100% {
@@ -586,6 +618,22 @@ mark,
   height: 1px;
   width: 64px;
   background: linear-gradient(90deg, transparent, rgb(var(--r-muted) / 0.6), transparent);
+}
+
+.reader-text .rp-break-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.reader-text .rp-break-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
+}
+.reader-text .rp-break-dots i:nth-child(2) {
+  width: 6px;
+  height: 6px;
 }
 
 .reader-text .rp-image {

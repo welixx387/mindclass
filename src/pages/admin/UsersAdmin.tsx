@@ -62,7 +62,7 @@ export default function UsersAdmin() {
         ) : (
           users.map((u) => (
             <div key={u.id} className="flex flex-wrap items-center gap-3 border-b border-line/60 bg-surface/60 px-4 py-3 last:border-b-0">
-              <Avatar motif={u.avatar_piece} color={u.avatar_color} size={36} />
+              <Avatar name={u.username} color={u.avatar_color} size={36} />
               <div className="min-w-0 flex-1">
                 <Link to={`/u/${encodeURIComponent(u.username)}`} className="flex items-center gap-2 text-sm font-semibold hover:text-accent">
                   {u.username} <ClassBadge letter={u.class_letter} />

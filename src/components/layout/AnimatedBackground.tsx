@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { SparkleShape } from '../brand/Motif'
 
 // Лепестки: позиция по горизонтали, размер, скорость, задержка, амплитуда покачивания.
 const PETALS = [
@@ -14,18 +13,19 @@ const PETALS = [
   { left: '93%', size: 14, duration: 18, delay: 5, sway: 40, alpha: 0.45 },
 ]
 
-const SPARKLES = [
-  { top: '12%', left: '8%', size: 14, delay: 0 },
-  { top: '28%', left: '90%', size: 18, delay: 1.4 },
-  { top: '52%', left: '4%', size: 12, delay: 2.2 },
-  { top: '68%', left: '86%', size: 16, delay: 3.1 },
-  { top: '84%', left: '14%', size: 12, delay: 0.8 },
-  { top: '40%', left: '50%', size: 10, delay: 4 },
+// Блики: кольца и точки, которые то проявляются, то гаснут.
+const GLINTS = [
+  { top: '12%', left: '8%', size: 16, delay: 0, ring: true },
+  { top: '28%', left: '90%', size: 8, delay: 1.4, ring: false },
+  { top: '52%', left: '4%', size: 12, delay: 2.2, ring: true },
+  { top: '68%', left: '86%', size: 18, delay: 3.1, ring: true },
+  { top: '84%', left: '14%', size: 7, delay: 0.8, ring: false },
+  { top: '40%', left: '50%', size: 6, delay: 4, ring: false },
 ]
 
 /**
  * Фон сайта: розовый горошек, мягкие светящиеся сферы, падающие лепестки,
- * мерцающие искры и прожектор за курсором.
+ * мерцающие блики и прожектор за курсором.
  */
 export function AnimatedBackground() {
   const spot = useRef<HTMLDivElement>(null)
@@ -87,12 +87,11 @@ export function AnimatedBackground() {
             }
           />
         ))}
-        {SPARKLES.map((s, i) => (
-          <SparkleShape
+        {GLINTS.map((g, i) => (
+          <span
             key={i}
-            size={s.size}
-            className="absolute hidden text-accent md:block"
-            style={{ top: s.top, left: s.left, opacity: 0, animation: `twinkle 4.8s ease-in-out ${s.delay}s infinite` }}
+            className={`absolute hidden rounded-full md:block ${g.ring ? 'border-[1.5px] border-accent/60' : 'bg-accent/60'}`}
+            style={{ top: g.top, left: g.left, width: g.size, height: g.size, opacity: 0, animation: `twinkle 4.8s ease-in-out ${g.delay}s infinite` }}
           />
         ))}
       </div>

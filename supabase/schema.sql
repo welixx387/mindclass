@@ -609,7 +609,55 @@ grant execute on function public.profile_stats(uuid) to anon, authenticated;
 
 
 -- ---------------------------------------------------------------------
---  Хранилище иллюстраций (Storage)
+--  Оформление сайта: арт на главной и на странице входа
+--  (Админка → Оформление). Читают все, меняют только администраторы.
+-- ---------------------------------------------------------------------
+
+create table if not exists public.site_settings (
+  key text primary key check (key ~ '^[a-z_]{1,40}$'),
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users (id) on delete set null
+);
+
+alter table public.site_settings enable row level security;
+
+drop policy if exists "Site settings are public" on public.site_settings;
+create policy "Site settings are public"
+  on public.site_settings for select
+  using (true);
+
+drop policy if exists "Admins manage site settings" on public.site_settings;
+create policy "Admins manage site settings"
+  on public.site_settings for all to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+revoke insert, update, delete on public.site_settings from anon;
+grant select on public.site_settings to anon, authenticated;
+grant insert, update, delete on public.site_settings to authenticated;
+
+create or replace function public.site_settings_before_write()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  new.updated_at := now();
+  new.updated_by := auth.uid();
+  return new;
+end;
+$$;
+
+drop trigger if exists site_settings_before_write on public.site_settings;
+create trigger site_settings_before_write
+  before insert or update on public.site_settings
+  for each row execute function public.site_settings_before_write();
+
+
+-- ---------------------------------------------------------------------
+--  Хранилище иллюстраций (Storage). Картинки оформления лежат
+--  в той же корзине, в папке site/.
 -- ---------------------------------------------------------------------
 
 insert into storage.buckets (id, name, public)

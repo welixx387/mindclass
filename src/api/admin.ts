@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { HERO_ART_KEY, type HeroArtSetting } from '../lib/heroArt'
 import type { ImportedChapter, ImportedImage } from '../lib/importers'
 import { ILLUSTRATIONS_BUCKET, isSupabaseConfigured, requireSupabase } from '../lib/supabase'
 import type { ChapterMeta, Profile, Role } from '../lib/types'
@@ -96,6 +97,46 @@ export async function uploadIllustration(volumeSlug: string, image: Pick<Importe
   return client.storage.from(ILLUSTRATIONS_BUCKET).getPublicUrl(path).data.publicUrl
 }
 
+/** Картинки для оформления сайта лежат в том же хранилище, в папке site/. */
+const SITE_FOLDER = 'site/'
+
+/** Загружает арт для главной страницы и возвращает публичную ссылку и путь файла. */
+export async function uploadSiteArt(file: File): Promise<{ url: string; path: string }> {
+  const client = requireSupabase()
+  const data = new Uint8Array(await file.arrayBuffer())
+  const path = `${SITE_FOLDER}hero-${(await sha256(data)).slice(0, 20)}.${EXT_BY_TYPE[file.type] ?? 'bin'}`
+  const { error } = await client.storage.from(ILLUSTRATIONS_BUCKET).upload(path, data, {
+    contentType: file.type,
+    upsert: true,
+    cacheControl: '31536000',
+  })
+  if (error) throw error
+  return { url: client.storage.from(ILLUSTRATIONS_BUCKET).getPublicUrl(path).data.publicUrl, path }
+}
+
+async function removeSiteFile(path: string | undefined) {
+  if (!path?.startsWith(SITE_FOLDER)) return
+  // Лишний файл в хранилище никому не мешает, поэтому ошибку удаления не показываем.
+  await requireSupabase()
+    .storage.from(ILLUSTRATIONS_BUCKET)
+    .remove([path])
+    .catch(() => undefined)
+}
+
+/** Сохраняет арт и его подпись. Прежняя картинка, если её заменили, удаляется. */
+export async function saveHeroArt(value: HeroArtSetting, previousPath?: string): Promise<void> {
+  const { error } = await requireSupabase().from('site_settings').upsert({ key: HERO_ART_KEY, value })
+  if (error) throw error
+  if (previousPath !== value.path) await removeSiteFile(previousPath)
+}
+
+/** Убирает арт: на главной и на странице входа снова будет талисман. */
+export async function removeHeroArt(path?: string): Promise<void> {
+  const { error } = await requireSupabase().from('site_settings').delete().eq('key', HERO_ART_KEY)
+  if (error) throw error
+  await removeSiteFile(path)
+}
+
 export type ImportMode = 'append' | 'replace'
 
 export interface ImportProgress {
@@ -180,7 +221,7 @@ export function useProfilesAdmin(search: string) {
   return useQuery({
     queryKey: ['admin-profiles', search],
     queryFn: async () => {
-      let query = requireSupabase().from('profiles').select('id, username, class_letter, avatar_piece, avatar_color, bio, role, created_at')
+      let query = requireSupabase().from('profiles').select('id, username, class_letter, avatar_color, bio, role, created_at')
       const q = search.trim()
       if (q) query = query.ilike('username', `%${q.replace(/[%_\\]/g, (ch) => `\\${ch}`)}%`)
       const { data, error } = await query.order('created_at', { ascending: false }).limit(60)

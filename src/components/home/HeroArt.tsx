@@ -1,49 +1,80 @@
 import { motion } from 'framer-motion'
-import { BookmarkCheck, MessageCircle, Ribbon, TrendingUp } from 'lucide-react'
-import { useId } from 'react'
-import { HERO_ART, THEME_NAME } from '../../lib/art'
-import { SparkleShape } from '../brand/Motif'
+import { BookmarkCheck, MessageCircle, TrendingUp } from 'lucide-react'
+import { useState } from 'react'
+import { useHeroArt } from '../../api/site'
+import { objectPosition, type HeroPicture } from '../../lib/heroArt'
+import { Mascot } from '../brand/Mascot'
 import { TiltCard } from '../catalog/VolumeCard'
 
 const EASE = [0.22, 1, 0.36, 1] as const
+export const CARD_BG = 'linear-gradient(160deg, #3a1330, #1a0b1d 55%, #2a1236)'
+
+/** Сцена с талисманом: горошек, мягкий свет и Лина с книгой. */
+export function MascotScene({ className = '' }: { className?: string }) {
+  return (
+    <div className={`overflow-hidden ${className}`}>
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 38%, rgb(255 120 185 / 0.45), transparent 62%)' }} />
+      <div className="bg-dots absolute inset-0 opacity-70 [mask-image:none]" />
+      <div className="absolute left-[10%] top-[16%] h-16 w-16 rounded-full bg-white/10 blur-xl" />
+      <div className="absolute right-[12%] top-[30%] h-10 w-10 rounded-full bg-[#ffb3d1]/20 blur-lg" />
+      <Mascot className="absolute inset-0 h-full w-full" viewBox="36 64 328 410" />
+    </div>
+  )
+}
+
+/** Картинка, которая плавно проявляется, когда загрузится. */
+export function ArtImage({ picture, onError }: { picture: HeroPicture; onError?: () => void }) {
+  const [loaded, setLoaded] = useState(false)
+  return (
+    <img
+      src={picture.src}
+      alt={picture.caption}
+      draggable={false}
+      onLoad={() => setLoaded(true)}
+      onError={onError}
+      className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      style={{ objectPosition: objectPosition(picture) }}
+    />
+  )
+}
 
 /**
- * Эмблема, которая показывается, пока в src/assets/art нет своего арта:
- * глянцевое сердце с бантом, орбитой искр и лёгким «глитчем».
+ * Что показать в карточке: арт владельца сайта или (null) талисман.
+ * Если картинка не загрузилась, тоже показывается талисман.
+ * undefined — настройки оформления ещё загружаются.
  */
-export function HeartEmblem({ className = '' }: { className?: string }) {
-  const id = useId().replace(/:/g, '')
+export function useHeroPicture() {
+  const art = useHeroArt()
+  const [failed, setFailed] = useState<string | null>(null)
+  const picture = art && art.src === failed ? null : art
+  return { picture, onError: () => art && setFailed(art.src) }
+}
+
+/** Лицевая сторона карточки: арт или талисман и стикер с подписью. */
+export function HeroCardFace({
+  picture,
+  onError,
+  className = 'rounded-[31px]',
+}: {
+  picture: HeroPicture | null | undefined
+  onError?: () => void
+  className?: string
+}) {
   return (
-    <div className={`flex items-center justify-center ${className}`}>
-      <div className="absolute inset-[12%] rounded-full border border-dashed border-white/25" style={{ animation: 'spin-slow 40s linear infinite' }} />
-      <div className="absolute inset-[24%] rounded-full border border-white/15" />
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="absolute inset-[12%]" style={{ animation: `spin-slow ${18 + i * 6}s linear infinite`, animationDelay: `-${i * 4}s` }}>
-          <SparkleShape size={10 + i * 3} className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 text-white/80" />
+    <div className={`relative h-full w-full overflow-hidden ${className}`} style={{ background: CARD_BG }}>
+      {picture === undefined ? null : picture ? (
+        <ArtImage key={picture.src} picture={picture} onError={onError} />
+      ) : (
+        <MascotScene className="absolute inset-0" />
+      )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/45 to-transparent" />
+      <span className="absolute right-5 top-5 font-display text-[10px] uppercase tracking-[0.25em] text-white/70">MindClass</span>
+      {picture !== undefined && (
+        <div className="absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-2xl bg-white/90 px-3.5 py-2 text-[#2c1226] shadow-lg">
+          <p className="font-display text-[10px] uppercase tracking-[0.2em] text-[#e0337f]">{picture ? 'тема оформления' : 'талисман сайта'}</p>
+          <p className="truncate font-display text-sm font-semibold">{picture ? picture.caption : 'Лина'}</p>
         </div>
-      ))}
-      <svg viewBox="0 0 200 180" className="relative w-[58%] drop-shadow-[0_18px_40px_rgba(255,60,150,0.55)]" style={{ animation: 'heartbeat 2.6s ease-in-out infinite' }}>
-        <defs>
-          <linearGradient id={`h${id}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ffd1e6" />
-            <stop offset="45%" stopColor="#ff5ea8" />
-            <stop offset="100%" stopColor="#b3165e" />
-          </linearGradient>
-          <radialGradient id={`s${id}`} cx="30%" cy="25%" r="45%">
-            <stop offset="0%" stopColor="#fff" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#fff" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <path
-          d="M100 172C42 128 6 96 6 56 6 26 29 6 56 6c20 0 35 10 44 26C109 16 124 6 144 6c27 0 50 20 50 50 0 40-36 72-94 116Z"
-          fill={`url(#h${id})`}
-        />
-        <path d="M100 172C42 128 6 96 6 56 6 26 29 6 56 6c20 0 35 10 44 26C109 16 124 6 144 6c27 0 50 20 50 50 0 40-36 72-94 116Z" fill={`url(#s${id})`} />
-        <ellipse cx="55" cy="45" rx="22" ry="12" fill="#fff" opacity="0.45" transform="rotate(-30 55 45)" />
-      </svg>
-      <div className="absolute left-[22%] top-[24%] -rotate-12 rounded-full bg-white/90 p-2 text-[#e0337f] shadow-lg">
-        <Ribbon size={22} strokeWidth={2.2} />
-      </div>
+      )}
     </div>
   )
 }
@@ -66,8 +97,10 @@ function FloatingChip({ children, className, delay, float }: { children: React.R
   )
 }
 
-/** Карточка в герое главной: свой арт владельца сайта или эмблема. */
+/** Карточка в герое главной: арт владельца сайта или талисман Лина. */
 export function HeroArt() {
+  const { picture, onError } = useHeroPicture()
+
   return (
     <div className="relative mx-auto w-full max-w-[440px] select-none px-6 py-6 sm:px-10">
       <motion.div
@@ -80,22 +113,7 @@ export function HeroArt() {
             className="relative aspect-[4/5] overflow-hidden rounded-[34px] p-[3px] shadow-glow"
             style={{ background: 'linear-gradient(140deg, #ffd1e6, rgb(var(--accent)), rgb(var(--accent-2)))' }}
           >
-            <div className="relative h-full w-full overflow-hidden rounded-[31px]" style={{ background: 'linear-gradient(160deg, #2a0f24, #150a18 60%, #24102e)' }}>
-              {HERO_ART ? (
-                <img src={HERO_ART} alt={THEME_NAME} className="h-full w-full object-cover" />
-              ) : (
-                <>
-                  <div className="bg-dots absolute inset-0 opacity-80 [mask-image:none]" />
-                  <HeartEmblem className="absolute inset-0" />
-                </>
-              )}
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent" />
-              <span className="absolute right-5 top-5 font-display text-[10px] uppercase tracking-[0.25em] text-white/70">MindClass</span>
-              <div className="absolute bottom-4 left-4 rounded-2xl bg-white/90 px-3.5 py-2 text-[#2c1226] shadow-lg">
-                <p className="font-display text-[10px] uppercase tracking-[0.2em] text-[#e0337f]">тема оформления</p>
-                <p className="font-display text-sm font-semibold">{THEME_NAME}</p>
-              </div>
-            </div>
+            <HeroCardFace picture={picture} onError={onError} />
           </div>
         </TiltCard>
       </motion.div>
@@ -106,11 +124,11 @@ export function HeroArt() {
           Том 3 · <b className="font-semibold text-ink">64%</b>
         </span>
       </FloatingChip>
-      <FloatingChip className="-right-6 top-[38%]" delay={0.9} float={7}>
+      <FloatingChip className="-right-16 top-[34%]" delay={0.9} float={7}>
         <BookmarkCheck size={15} className="text-success" />
         <span>Закладка сохранена</span>
       </FloatingChip>
-      <FloatingChip className="-right-10 top-[58%]" delay={1.2} float={8}>
+      <FloatingChip className="-right-20 top-[62%]" delay={1.2} float={8}>
         <MessageCircle size={15} className="text-gold" />
         <span>
           <span className="spoiler revealed px-1">спойлер</span> скрыт от читателей

@@ -42,7 +42,7 @@ export default function ModerationAdmin() {
           <AnimatePresence initial={false}>
             {data.map((c) => (
               <motion.div key={c.id} layout exit={{ opacity: 0, height: 0 }} className="card flex gap-4 p-4">
-                <Avatar motif={c.author?.avatar_piece ?? 'heart'} color={c.author?.avatar_color ?? 'graphite'} size={36} />
+                <Avatar name={c.author?.username} color={c.author?.avatar_color ?? 'graphite'} size={36} />
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2 text-sm">
                     <span className="font-semibold">{c.author?.username}</span>

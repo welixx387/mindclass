@@ -5,11 +5,11 @@ import {
   ArrowRight,
   Bookmark as BookmarkIcon,
   BookmarkPlus,
+  BookX,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Expand,
-  HeartCrack,
   List,
   MessageSquareText,
   Minimize,
@@ -95,7 +95,7 @@ export default function ReaderPage({ demo = false }: { demo?: boolean }) {
 function ReaderMessage({ title, text }: { title: string; text: string }) {
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center px-6 text-center">
-      <HeartCrack size={56} strokeWidth={1.2} className="opacity-40" />
+      <BookX size={56} strokeWidth={1.2} className="opacity-40" />
       <h1 className="mt-6 font-display text-2xl font-semibold">{title}</h1>
       <p className="mt-2 max-w-md text-sm opacity-70">{text}</p>
       <Link to="/" className="btn-primary mt-8">

@@ -32,7 +32,11 @@ export const ChapterText = memo(function ChapterText({
           case 'break':
             return (
               <div key={i} {...common} className="rp rp-break" aria-hidden="true">
-                ♡
+                <span className="rp-break-dots">
+                  <i />
+                  <i />
+                  <i />
+                </span>
               </div>
             )
           case 'image':

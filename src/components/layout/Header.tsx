@@ -68,7 +68,7 @@ function UserMenu() {
         aria-expanded={open}
         aria-label="Меню профиля"
       >
-        <Avatar motif={profile.avatar_piece} color={profile.avatar_color} size={36} />
+        <Avatar name={profile.username} color={profile.avatar_color} size={36} />
       </button>
       <AnimatePresence>
         {open && (
@@ -81,7 +81,7 @@ function UserMenu() {
             className="absolute right-0 top-12 z-50 w-64 origin-top-right rounded-2xl border border-line bg-elev p-2 shadow-pop"
           >
             <div className="flex items-center gap-3 px-3 pb-3 pt-2">
-              <Avatar motif={profile.avatar_piece} color={profile.avatar_color} size={40} />
+              <Avatar name={profile.username} color={profile.avatar_color} size={40} />
               <div className="min-w-0">
                 <p className="truncate font-semibold">{profile.username}</p>
                 <ClassBadge letter={profile.class_letter} className="mt-1" />

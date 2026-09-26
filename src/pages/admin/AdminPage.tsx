@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { LayoutDashboard, Library, MessageSquareWarning, ShieldAlert, Users } from 'lucide-react'
+import { Image as ImageIcon, LayoutDashboard, Library, MessageSquareWarning, ShieldAlert, Users } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { EmptyState, PageLoader } from '../../components/ui/misc'
@@ -11,12 +11,14 @@ const VolumeManager = lazy(() => import('./VolumeManager'))
 const ChapterEditor = lazy(() => import('./ChapterEditor'))
 const UsersAdmin = lazy(() => import('./UsersAdmin'))
 const ModerationAdmin = lazy(() => import('./ModerationAdmin'))
+const AppearanceAdmin = lazy(() => import('./AppearanceAdmin'))
 
 const NAV = [
   { to: '/admin', label: 'Обзор', icon: LayoutDashboard, end: true },
   { to: '/admin/volumes', label: 'Тома и главы', icon: Library },
   { to: '/admin/users', label: 'Пользователи', icon: Users },
   { to: '/admin/comments', label: 'Комментарии', icon: MessageSquareWarning },
+  { to: '/admin/appearance', label: 'Оформление', icon: ImageIcon },
 ]
 
 export default function AdminPage() {
@@ -93,6 +95,7 @@ export default function AdminPage() {
             <Route path="chapter/:id" element={<ChapterEditor />} />
             <Route path="users" element={<UsersAdmin />} />
             <Route path="comments" element={<ModerationAdmin />} />
+            <Route path="appearance" element={<AppearanceAdmin />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>
         </Suspense>

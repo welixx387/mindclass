@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { HeartCrack } from 'lucide-react'
+import { Mascot } from '../components/brand/Mascot'
 
 export default function NotFoundPage() {
   return (
@@ -14,12 +14,17 @@ export default function NotFoundPage() {
           404
         </motion.p>
         <motion.div
-          className="absolute inset-0 flex items-center justify-center text-accent"
-          initial={{ y: -30, opacity: 0, rotate: -40 }}
-          animate={{ y: 0, opacity: 1, rotate: 12 }}
-          transition={{ type: 'spring', stiffness: 160, damping: 10, delay: 0.2 }}
+          className="absolute inset-0 flex items-center justify-center"
+          initial={{ y: -30, opacity: 0, rotate: -24 }}
+          animate={{ y: 0, opacity: 1, rotate: 6 }}
+          transition={{ type: 'spring', stiffness: 160, damping: 11, delay: 0.2 }}
         >
-          <HeartCrack size={84} strokeWidth={1.3} />
+          <div
+            className="h-28 w-28 overflow-hidden rounded-full border-4 border-surface shadow-glow sm:h-36 sm:w-36"
+            style={{ background: 'radial-gradient(circle at 50% 40%, #6b2150, #1a0b1d 75%)' }}
+          >
+            <Mascot viewBox="80 80 240 240" className="h-full w-full" title="Лина ищет пропавшую страницу" />
+          </div>
         </motion.div>
       </div>
       <h1 className="mt-6 font-display text-2xl font-semibold">Эта комната пуста</h1>

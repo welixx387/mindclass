@@ -1,22 +1,21 @@
 import { motion, useAnimationControls } from 'framer-motion'
 import { useId } from 'react'
 
-const HEART = 'M18 29.5C10.2 24 5.5 19.8 5.5 14.6 5.5 10.9 8.4 8 12 8c2.4 0 4.6 1.3 6 3.3C19.4 9.3 21.6 8 24 8c3.6 0 6.5 2.9 6.5 6.6 0 5.2-4.7 9.4-12.5 14.9Z'
-const SPARKLE = 'M12 0c.7 6.3 5.7 11.3 12 12-6.3.7-11.3 5.7-12 12-.7-6.3-5.7-11.3-12-12C6.3 11.3 11.3 6.3 12 0Z'
+const LETTER = 'M7.5 25.5V11.5l7.5 9 7.5-9v14'
 
 /**
- * Знак MindClass: розовая плитка с сердцем и искоркой.
- * При наведении сердце «бьётся», а искорка вспыхивает.
+ * Знак MindClass: розовая плитка с монограммой «M.».
+ * При наведении буква прорисовывается заново, а точка подпрыгивает.
  */
 export function LogoMark({ size = 36, interactive = true }: { size?: number; interactive?: boolean }) {
-  const heart = useAnimationControls()
-  const spark = useAnimationControls()
+  const letter = useAnimationControls()
+  const dot = useAnimationControls()
   const gradient = useId().replace(/:/g, '')
 
   const play = () => {
     if (!interactive) return
-    void heart.start({ scale: [1, 1.18, 0.95, 1.08, 1], transition: { duration: 0.8, ease: 'easeInOut' } })
-    void spark.start({ scale: [0.6, 1.35, 1], rotate: [0, 90, 180], opacity: [0.6, 1, 1], transition: { duration: 0.8 } })
+    void letter.start({ pathLength: [0.05, 1], transition: { duration: 0.7, ease: 'easeInOut' } })
+    void dot.start({ y: [0, -7, 0, -2.5, 0], transition: { duration: 0.8, delay: 0.3, ease: 'easeOut' } })
   }
 
   return (
@@ -31,10 +30,17 @@ export function LogoMark({ size = 36, interactive = true }: { size?: number; int
         </defs>
         <rect width="36" height="36" rx="11" fill={`url(#lg${gradient})`} />
         <circle cx="9" cy="8" r="7" fill="white" opacity="0.18" />
-        <motion.path d={HEART} fill="white" animate={heart} style={{ originX: '18px', originY: '19px' }} />
-        <motion.g animate={spark} style={{ originX: '28px', originY: '9px' }}>
-          <path d={SPARKLE} fill="#fff4b8" transform="translate(23.5 4.5) scale(0.375)" />
-        </motion.g>
+        <motion.path
+          d={LETTER}
+          fill="none"
+          stroke="white"
+          strokeWidth="3.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ pathLength: 1 }}
+          animate={letter}
+        />
+        <motion.circle cx="28" cy="24.6" r="2.7" fill="#fff4b8" animate={dot} />
       </svg>
     </span>
   )

@@ -3,12 +3,9 @@ import { Check, Eye, EyeOff, Loader2, MailCheck, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { isUsernameAvailable } from '../api/profiles'
-import { Motif } from '../components/brand/Motif'
-import { HeartEmblem } from '../components/home/HeroArt'
+import { ArtImage, CARD_BG, MascotScene, useHeroPicture } from '../components/home/HeroArt'
 import { LogoMark } from '../components/brand/Logo'
-import { Avatar, AVATAR_COLOR_IDS, AVATAR_COLORS, CLASS_INFO } from '../components/ui/Avatar'
-import { AVATAR_MOTIFS, MOTIF_LABELS, type AvatarMotif, type MotifName } from '../data/motifs'
-import { HERO_ART, THEME_NAME } from '../lib/art'
+import { Avatar, AVATAR_COLOR_IDS, AVATAR_COLORS, CLASS_INFO, initialOf } from '../components/ui/Avatar'
 import { isSupabaseConfigured } from '../lib/supabase'
 import type { ClassLetter } from '../lib/types'
 import { useAuth } from '../store/auth'
@@ -97,54 +94,19 @@ function Strength({ password }: { password: string }) {
 }
 
 function ArtPanel() {
-  const floating: { motif: MotifName; x: string; y: string; size: number; delay: number }[] = [
-    { motif: 'sparkles', x: '18%', y: '20%', size: 40, delay: 0.3 },
-    { motif: 'flower', x: '82%', y: '18%', size: 46, delay: 0.4 },
-    { motif: 'star', x: '14%', y: '70%', size: 36, delay: 0.5 },
-    { motif: 'cherry', x: '86%', y: '66%', size: 42, delay: 0.6 },
-  ]
+  const { picture, onError } = useHeroPicture()
   return (
-    <div className="relative hidden overflow-hidden rounded-[32px] border border-line/70 bg-surface/60 lg:block">
-      <div className="bg-dots absolute inset-0 opacity-90 [mask-image:none]" />
-      <div className="orb left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2" style={{ background: 'rgb(var(--accent) / 0.28)' }} />
-      {HERO_ART ? (
-        <motion.img
-          src={HERO_ART}
-          alt={THEME_NAME}
-          initial={{ opacity: 0, scale: 1.04 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: EASE }}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+    <div className="relative hidden overflow-hidden rounded-[32px] border border-line/70 lg:block" style={{ background: CARD_BG }}>
+      {picture === undefined ? null : picture ? (
+        <ArtImage key={picture.src} picture={picture} onError={onError} />
       ) : (
-        <>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.9, ease: EASE }}
-            className="absolute inset-x-[14%] top-[10%] aspect-square"
-          >
-            <HeartEmblem className="relative h-full w-full" />
-          </motion.div>
-          {floating.map((f) => (
-            <motion.div
-              key={f.motif}
-              className="absolute -translate-x-1/2 -translate-y-1/2 text-accent"
-              style={{ left: f.x, top: f.y }}
-              initial={{ opacity: 0, y: 30, scale: 0.8 }}
-              animate={{ opacity: 0.55, y: 0, scale: 1 }}
-              transition={{ delay: f.delay, duration: 0.9, ease: EASE }}
-            >
-              <div style={{ animation: `float-soft ${7 + f.size / 20}s ease-in-out infinite` }}>
-                <Motif name={f.motif} size={f.size} strokeWidth={1.4} />
-              </div>
-            </motion.div>
-          ))}
-        </>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE }} className="absolute inset-0">
+          <MascotScene className="absolute inset-0" />
+        </motion.div>
       )}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-bg/95 via-bg/60 to-transparent p-10 pt-24">
-        <p className="font-quote text-3xl italic leading-snug text-ink">«Знание — сила.»</p>
-        <p className="mt-2 font-display text-xs uppercase tracking-[0.3em] text-muted">— Фрэнсис Бэкон</p>
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#12070f]/95 via-[#12070f]/60 to-transparent p-10 pt-28">
+        <p className="font-quote text-3xl italic leading-snug text-white">«Знание — сила.»</p>
+        <p className="mt-2 font-display text-xs uppercase tracking-[0.3em] text-white/60">— Фрэнсис Бэкон</p>
       </div>
     </div>
   )
@@ -271,7 +233,6 @@ function RegisterForm({ next }: { next: string }) {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [classLetter, setClassLetter] = useState<ClassLetter>('D')
-  const [motif, setMotif] = useState<AvatarMotif>('heart')
   const [color, setColor] = useState('rose')
   const [availability, setAvailability] = useState<'idle' | 'checking' | 'free' | 'taken' | 'invalid'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -306,7 +267,7 @@ function RegisterForm({ next }: { next: string }) {
     if (password.length < 6) return setError('Пароль должен быть не короче 6 символов')
     if (password !== confirm) return setError('Пароли не совпадают')
     setPending(true)
-    const result = await signUp({ email, password, username: username.trim(), classLetter, avatarMotif: motif, avatarColor: color })
+    const result = await signUp({ email, password, username: username.trim(), classLetter, avatarColor: color })
     setPending(false)
     if (result.error) setError(result.error)
     else if (result.needsConfirmation) setSentTo(email.trim())
@@ -346,16 +307,23 @@ function RegisterForm({ next }: { next: string }) {
     invalid: <span className="text-danger">3–24 символа</span>,
   }[availability]
 
+  const shownName = username.trim() || 'Ваш ник'
+
   return (
     <form onSubmit={submit} className="space-y-4">
       <div className="card flex items-center gap-4 p-4">
-        <motion.div key={`${motif}-${color}`} initial={{ scale: 0.7, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 16 }}>
-          <Avatar motif={motif} color={color} size={56} />
+        <motion.div
+          key={`${initialOf(shownName)}-${color}`}
+          initial={{ scale: 0.7, rotate: -20 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 16 }}
+        >
+          <Avatar name={shownName} color={color} size={56} />
         </motion.div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">{username.trim() || 'Ваш ник'}</p>
+          <p className="truncate font-semibold">{shownName}</p>
           <p className="text-xs text-muted">
-            Класс {classLetter} · {MOTIF_LABELS[motif]}
+            Класс {classLetter} · {AVATAR_COLORS[color].label}
           </p>
         </div>
       </div>
@@ -405,22 +373,8 @@ function RegisterForm({ next }: { next: string }) {
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-semibold">Значок и цвет аватара</p>
-        <div className="grid grid-cols-6 gap-2">
-          {AVATAR_MOTIFS.map((m) => (
-            <button
-              type="button"
-              key={m}
-              onClick={() => setMotif(m)}
-              title={MOTIF_LABELS[m]}
-              aria-label={MOTIF_LABELS[m]}
-              className={`flex aspect-square items-center justify-center rounded-xl border transition-colors ${motif === m ? 'border-accent bg-accent/10 text-accent' : 'border-line text-ink-2 hover:text-ink'}`}
-            >
-              <Motif name={m} size={20} />
-            </button>
-          ))}
-        </div>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <p className="mb-2 text-sm font-semibold">Цвет аватара</p>
+        <div className="flex flex-wrap gap-2">
           {AVATAR_COLOR_IDS.map((c) => (
             <button
               type="button"

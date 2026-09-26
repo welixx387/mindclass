@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase'
 import type { Profile, SearchHit } from '../lib/types'
 
-const PROFILE_COLUMNS = 'id, username, class_letter, avatar_piece, avatar_color, bio, role, created_at'
+const PROFILE_COLUMNS = 'id, username, class_letter, avatar_color, bio, role, created_at'
 
 export function useProfileByUsername(username: string | undefined) {
   return useQuery({

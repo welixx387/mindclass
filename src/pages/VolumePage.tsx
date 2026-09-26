@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, Clock3, FileUp, MessageCircle, Play, Settings2, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, Clock3, FileUp, MessageCircle, Play, Settings2 } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useVolumeChapters } from '../api/chapters'
@@ -134,7 +134,7 @@ export default function VolumePage() {
           </div>
         ) : list.length === 0 ? (
           <EmptyState
-            icon={<Sparkles size={24} />}
+            icon={<BookOpen size={24} />}
             title="Главы этого тома ещё не загружены"
             action={
               <>

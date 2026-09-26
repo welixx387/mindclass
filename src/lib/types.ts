@@ -1,5 +1,3 @@
-import type { AvatarMotif } from '../data/motifs'
-
 export type ClassLetter = 'A' | 'B' | 'C' | 'D'
 export type Role = 'reader' | 'moderator' | 'admin'
 
@@ -7,15 +5,13 @@ export interface Profile {
   id: string
   username: string
   class_letter: ClassLetter
-  /** Значок аватара (колонка называется avatar_piece по историческим причинам). */
-  avatar_piece: AvatarMotif
   avatar_color: string
   bio: string
   role: Role
   created_at: string
 }
 
-export type ProfileSummary = Pick<Profile, 'id' | 'username' | 'class_letter' | 'avatar_piece' | 'avatar_color' | 'role'>
+export type ProfileSummary = Pick<Profile, 'id' | 'username' | 'class_letter' | 'avatar_color' | 'role'>
 
 export interface ChapterMeta {
   id: number

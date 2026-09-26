@@ -351,7 +351,7 @@ function CommentItem({
   return (
     <article id={`comment-${comment.id}`} className="group/comment flex scroll-mt-28 gap-3 sm:gap-4">
       <Link to={author ? `/u/${encodeURIComponent(author.username)}` : '#'} className="shrink-0">
-        <Avatar motif={author?.avatar_piece ?? 'heart'} color={author?.avatar_color ?? 'graphite'} size={small ? 32 : 40} />
+        <Avatar name={author?.username} color={author?.avatar_color ?? 'graphite'} size={small ? 32 : 40} />
       </Link>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
